@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#101512">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Lima Field">
+  
+  <title>Lima Field</title>
+<style>
+:root{
+  --bg:#101512;--panel:#171f1a;--panel2:#111814;--green:#37e06f;
+  --text:#f4f6f4;--muted:#aab5ad;--danger:#ff5c6a;--amber:#ffc857;
+  --safe-top:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-bottom);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;height:100%;overflow:hidden}
+button,input,select{font:inherit}
+button{cursor:pointer}
+#app{height:100%;display:flex;flex-direction:column}
+.topbar{
+  height:calc(74px + var(--safe-top));padding:calc(8px + var(--safe-top)) 12px 8px;
+  display:flex;align-items:center;gap:10px;background:rgba(16,21,18,.96);border-bottom:1px solid #253028;z-index:20
+}
+.brand-logo{height:54px;max-width:180px;object-fit:contain;object-position:left center}
+.topbar-actions{margin-left:auto;display:flex;gap:8px}
+.icon-btn{width:42px;height:42px;border:0;border-radius:13px;background:#202a23;color:white;font-size:22px;font-weight:700}
+.icon-btn:active{transform:scale(.96)}
+#main{flex:1;overflow:auto;padding-bottom:calc(76px + var(--safe-bottom))}
+.hidden{display:none!important}
+
+.home-hero{padding:14px 16px 4px}
+.kicker{font-size:12px;letter-spacing:1.4px;font-weight:800;color:var(--green)}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:28px;margin-bottom:6px}
+.muted{color:var(--muted)}
+.primary{background:var(--green);color:#061008;border:0;border-radius:15px;padding:14px 18px;font-weight:900}
+.secondary{background:#202a23;color:white;border:1px solid #334037;border-radius:14px;padding:12px 16px;font-weight:700}
+.danger{background:#3d171b;color:#ff9fa7;border:1px solid #6d2a31}
+.action-row{display:flex;gap:10px;flex-wrap:wrap}
+.card{margin:10px 12px;padding:15px;border-radius:18px;background:var(--panel);border:1px solid #263128}
+.project-card{display:flex;align-items:center;gap:12px}
+.project-icon{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:#1c3525;font-size:24px}
+.project-card .grow{flex:1;min-width:0}
+.project-card h3{margin:0 0 4px;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.project-card p{margin:0;color:var(--muted);font-size:13px}
+.chev{font-size:28px;color:#7d8a80}
+
+.bottom-nav{
+  position:fixed;left:0;right:0;bottom:0;height:calc(64px + var(--safe-bottom));
+  padding-bottom:var(--safe-bottom);background:rgba(15,20,17,.97);display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:1px solid #273129;z-index:30
+}
+.bottom-nav button{border:0;background:transparent;color:#859087;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px}
+.bottom-nav button span{font-size:19px}
+.bottom-nav button.active{color:var(--green);font-weight:800}
+
+.project-title{padding:13px 14px 0}
+.project-title h1{font-size:23px}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:9px}
+.quick-btn{min-height:68px;border:1px solid #2c382f;background:#151d18;color:white;border-radius:15px;font-size:12px;padding:8px 4px}
+.quick-btn b{display:block;font-size:22px;margin-bottom:4px}
+.quick-btn.active{background:var(--green);color:#041008}
+
+.map-wrap{position:relative;margin:0 9px 10px;border-radius:18px;overflow:hidden;border:1px solid #2c372f;background:#1c241f;height:54vh;min-height:360px}
+#fieldCanvas{width:100%;height:100%;display:block;touch-action:none}
+.map-message{position:absolute;left:12px;right:12px;top:12px;background:rgba(16,21,18,.89);border:1px solid #334238;border-radius:12px;padding:9px 11px;font-size:13px}
+.coords-panel{position:absolute;left:9px;right:9px;bottom:9px;background:rgba(14,19,16,.9);border:1px solid #314036;border-radius:15px;padding:10px 12px;backdrop-filter:blur(8px)}
+.coords-main{font-weight:800;font-size:13px}
+.coords-sub{font-size:11px;color:#c3cbc5;margin-top:4px}
+.accuracy{float:right;color:var(--green);font-weight:900}
+.area-pill{display:inline-block;margin-top:7px;color:var(--green);font-weight:900}
+
+.nav-compass{position:absolute;right:12px;top:56px;width:132px;background:rgba(14,19,16,.9);border:1px solid var(--green);border-radius:18px;padding:10px;text-align:center}
+.compass-dial{width:82px;height:82px;margin:auto;border-radius:50%;border:2px solid #bbc5bd;position:relative}
+.compass-dial::before{content:"N";position:absolute;top:2px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:900}
+.compass-arrow{position:absolute;left:50%;top:50%;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:38px solid var(--green);transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg);filter:drop-shadow(0 1px 2px #000)}
+.nav-distance{font-weight:900;margin-top:6px}
+.nav-bearing{font-size:12px;color:var(--muted)}
+
+.pdf-view{margin:10px;height:70vh;border-radius:18px;overflow:hidden;border:1px solid #2a372e;background:white}
+.pdf-view iframe{width:100%;height:100%;border:0}
+.info-banner{margin:10px 12px;padding:11px 13px;border-radius:14px;background:#18231d;border:1px solid #2f4135;font-size:13px}
+
+.photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}
+.photo-card{border-radius:15px;overflow:hidden;background:var(--panel);border:1px solid #2a352d}
+.photo-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.photo-card .meta{padding:8px;font-size:11px;color:var(--muted)}
+.file-list{padding:9px}
+.file-item{display:flex;align-items:center;gap:10px;padding:13px;border-bottom:1px solid #263128}
+.file-item .grow{flex:1;min-width:0}
+.file-item .name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.modal{border:0;background:transparent;padding:0;width:100%;height:100%}
+.modal::backdrop{background:rgba(0,0,0,.66);backdrop-filter:blur(5px)}
+.modal-card{position:absolute;left:10px;right:10px;bottom:calc(10px + var(--safe-bottom));max-height:86vh;overflow:auto;background:#141b17;border:1px solid #2d3931;border-radius:22px;padding:14px}
+.modal-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.modal-head h2{margin:0;font-size:20px}
+.modal-head .icon-btn{margin-left:auto}
+.form-row{margin:10px 0}
+.form-row label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px}
+.form-row input,.form-row select{width:100%;border:1px solid #314037;border-radius:13px;padding:12px;background:#111713;color:white}
+.switch-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #263128}
+.switch-row input{width:22px;height:22px}
+.small{font-size:12px}
+.note{background:#202820;border-left:3px solid var(--green);padding:10px 12px;border-radius:10px;color:#cad3cc;font-size:12px}
+
+.camera-layer{position:fixed;inset:0;background:#000;z-index:90;display:flex;flex-direction:column}
+.camera-video{width:100%;height:100%;object-fit:cover}
+.camera-controls{position:absolute;inset:0;pointer-events:none}
+.camera-close{position:absolute;top:calc(12px + var(--safe-top));left:12px;pointer-events:auto}
+.camera-shot{position:absolute;left:50%;bottom:calc(28px + var(--safe-bottom));transform:translateX(-50%);width:82px;height:82px;border-radius:50%;border:5px solid white;background:transparent;pointer-events:auto}
+.camera-shot::after{content:"";position:absolute;inset:7px;background:var(--green);border-radius:50%}
+.camera-info{position:absolute;left:15px;right:112px;bottom:calc(128px + var(--safe-bottom));color:white;font-weight:800;font-size:13px;text-shadow:0 1px 4px #000,0 0 2px #000}
+.camera-info .lf{color:var(--green);font-size:18px;font-weight:1000}
+.camera-compass{position:absolute;right:20px;bottom:calc(132px + var(--safe-bottom));width:76px;height:76px;border:2px solid white;border-radius:50%;filter:drop-shadow(0 1px 2px #000)}
+.camera-compass::before{content:"N";position:absolute;top:3px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900}
+.camera-compass .arrow{position:absolute;left:50%;top:50%;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:31px solid var(--green);transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg)}
+.toast{position:fixed;left:50%;bottom:calc(86px + var(--safe-bottom));transform:translateX(-50%) translateY(20px);background:#eef7f0;color:#0b160e;padding:10px 14px;border-radius:14px;font-weight:800;opacity:0;pointer-events:none;transition:.2s;z-index:120;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.empty{padding:38px 28px;text-align:center;color:var(--muted)}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;background:#223128;color:#b8c4bb}
+@media(min-width:800px){.modal-card{left:50%;right:auto;transform:translateX(-50%);width:620px}.home-hero,.project-title{max-width:900px;margin:auto}.card{max-width:900px;margin-left:auto;margin-right:auto}.map-wrap{max-width:980px;margin-left:auto;margin-right:auto}.quick-grid{max-width:900px;margin:auto}}
+
+.brand-text{display:flex;align-items:baseline;gap:7px;letter-spacing:.3px}
+.brand-text strong{font-size:28px;color:#37e06f;font-weight:1000}
+.brand-text span{font-size:23px;color:#eef2ef;font-weight:800}
+</style>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button id="backBtn" class="icon-btn hidden" aria-label="Voltar">‹</button>
+      <div class="brand-text"><strong>LIMA</strong><span>Field</span></div>
+      <div class="topbar-actions">
+        <button id="gpsBtn" class="icon-btn" title="GPS">⌖</button>
+        <button id="settingsBtn" class="icon-btn" title="Configurações">⚙</button>
+      </div>
+    </header>
+
+    <main id="main"></main>
+
+    <nav id="bottomNav" class="bottom-nav hidden">
+      <button data-tab="map" class="active"><span>🗺️</span>Mapa</button>
+      <button data-tab="photos"><span>📷</span>Fotos</button>
+      <button data-tab="files"><span>📁</span>Arquivos</button>
+    </nav>
+  </div>
+
+  <dialog id="modal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="modalTitle"></h2>
+        <button id="modalClose" class="icon-btn">×</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+/* Lima Field PWA Beta 0.1 - no external libraries */
+
+const $ = s => document.querySelector(s);
+const main = $('#main');
+const bottomNav = $('#bottomNav');
+const backBtn = $('#backBtn');
+const settingsBtn = $('#settingsBtn');
+const gpsBtn = $('#gpsBtn');
+const modal = $('#modal');
+const modalTitle = $('#modalTitle');
+const modalBody = $('#modalBody');
+const toastEl = $('#toast');
+
+const state = {
+  projects: JSON.parse(localStorage.getItem('lf_projects') || '[]'),
+  currentProjectId: null,
+  tab: 'map',
+  gps: null,
+  heading: 0,
+  orientationGranted: false,
+  mode: 'browse',
+  drawPoints: [],
+  destination: null,
+  mapFeatures: [],
+  mapView: null,
+  settings: Object.assign({
+    coordPrimary: 'utm',
+    coordSecondaryEnabled: true,
+    coordSecondary: 'dms',
+    datum: 'sirgas2000',
+    utmAuto: true,
+    utmZone: 21,
+    areaPrimary: 'ha',
+    areaSecondaryEnabled: true,
+    areaSecondary: 'alq_mg',
+    areaDecimals: 4,
+    customAreaName: 'Unidade',
+    customAreaSqm: 10000,
+    showSecondaryOnPhoto: false,
+    showAltitudeOnPhoto: true,
+    accuracyGood: 5,
+    accuracyMedium: 10
+  }, JSON.parse(localStorage.getItem('lf_settings') || '{}'))
+};
+
+function saveState(){
+  localStorage.setItem('lf_projects', JSON.stringify(state.projects));
+  localStorage.setItem('lf_settings', JSON.stringify(state.settings));
+}
+function currentProject(){ return state.projects.find(p=>p.id===state.currentProjectId); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function toast(msg){
+  toastEl.textContent = msg; toastEl.classList.add('show');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>toastEl.classList.remove('show'),2200);
+}
+
+function openModal(title, html){
+  modalTitle.textContent = title; modalBody.innerHTML = html; modal.showModal();
+}
+$('#modalClose').onclick=()=>modal.close();
+
+backBtn.onclick=()=>{
+  if(state.currentProjectId){ state.currentProjectId=null; state.tab='map'; renderHome(); }
+};
+settingsBtn.onclick=()=>renderSettings();
+gpsBtn.onclick=async()=>{
+  await requestSensors();
+  toast(state.gps ? `GPS ± ${state.gps.accuracy.toFixed(1)} m` : 'Aguardando GPS…');
+};
+bottomNav.addEventListener('click',e=>{
+  const b=e.target.closest('button[data-tab]'); if(!b)return;
+  state.tab=b.dataset.tab; renderProject();
+});
+
+function renderHome(){
+  backBtn.classList.add('hidden'); bottomNav.classList.add('hidden');
+  main.innerHTML = `
+    <section class="home-hero">
+      <div class="kicker">CAMPO OFFLINE</div>
+      <h1>Seus projetos</h1>
+      <p class="muted">GeoPDF, GPS, fotos, KML e medições em um só lugar.</p>
+      <button id="newProject" class="primary">+ Novo projeto</button>
+    </section>
+    <section id="projectList"></section>`;
+  $('#newProject').onclick=createProjectModal;
+  const list=$('#projectList');
+  if(!state.projects.length){list.innerHTML='<div class="empty">Crie o primeiro projeto para começar.</div>';return}
+  list.innerHTML=state.projects.map(p=>`
+    <div class="card project-card" data-id="${p.id}">
+      <div class="project-icon">🗺️</div>
+      <div class="grow"><h3>${esc(p.name)}</h3><p>${p.photos||0} fotos • ${p.geoPdfName?'GeoPDF carregado':'sem GeoPDF'}</p></div>
+      <div class="chev">›</div>
+    </div>`).join('');
+  list.querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>{
+    state.currentProjectId=el.dataset.id; state.tab='map'; state.drawPoints=[]; state.destination=null; state.mapFeatures=[];
+    renderProject(); requestSensors();
+  });
+}
+
+function createProjectModal(){
+  openModal('Novo projeto',`
+    <div class="form-row"><label>Nome do imóvel / projeto</label><input id="pname" placeholder="Ex.: Fazenda Santa Maria" autofocus></div>
+    <div class="action-row"><button id="createP" class="primary">Criar</button></div>`);
+  $('#createP').onclick=()=>{
+    const name=$('#pname').value.trim(); if(!name)return;
+    state.projects.unshift({id:uid(),name,photos:0,createdAt:new Date().toISOString(),geoPdfName:null,kmlNames:[]});
+    saveState(); modal.close(); renderHome();
+  };
+}
+
+function renderProject(){
+  const p=currentProject(); if(!p){renderHome();return}
+  backBtn.classList.remove('hidden'); bottomNav.classList.remove('hidden');
+  [...bottomNav.querySelectorAll('button')].forEach(b=>b.classList.toggle('active',b.dataset.tab===state.tab));
+  if(state.tab==='map') renderMapTab();
+  if(state.tab==='photos') renderPhotosTab();
+  if(state.tab==='files') renderFilesTab();
+}
+
+function projectHeader(){
+  const p=currentProject();
+  return `<section class="project-title"><div class="kicker">PROJETO</div><h1>${esc(p.name)}</h1></section>`;
+}
+
+function renderMapTab(){
+  main.innerHTML = projectHeader()+`
+  <div class="quick-grid">
+    <button class="quick-btn" id="openPdf"><b>📄</b>GeoPDF</button>
+    <button class="quick-btn" id="importKml"><b>🧩</b>KML/KMZ</button>
+    <button class="quick-btn" id="drawArea"><b>✏️</b>Área</button>
+    <button class="quick-btn" id="goPoint"><b>🧭</b>Ir ao ponto</button>
+  </div>
+  <div class="map-wrap">
+    <canvas id="fieldCanvas"></canvas>
+    <div id="mapMessage" class="map-message">Mapa de campo: importe KML/KMZ ou use o GPS. O GeoPDF abre em visualização própria neste beta.</div>
+    <div id="navCompass" class="nav-compass hidden">
+      <div class="compass-dial"><div id="navArrow" class="compass-arrow"></div></div>
+      <div id="navDistance" class="nav-distance">—</div>
+      <div id="navBearing" class="nav-bearing">—</div>
+    </div>
+    <div class="coords-panel">
+      <span id="accuracy" class="accuracy">GPS —</span>
+      <div id="coordMain" class="coords-main">Aguardando localização…</div>
+      <div id="coordSub" class="coords-sub"></div>
+      <div id="areaPill" class="area-pill"></div>
+    </div>
+  </div>`;
+  $('#openPdf').onclick=openGeoPdf;
+  $('#importKml').onclick=importKml;
+  $('#drawArea').onclick=()=>{state.mode=state.mode==='draw'?'browse':'draw'; if(state.mode==='draw') state.drawPoints=[]; renderMapTab();};
+  $('#goPoint').onclick=()=>showGoPointModal();
+  $('#drawArea').classList.toggle('active',state.mode==='draw');
+
+  const canvas=$('#fieldCanvas'); fitCanvas(canvas); bindCanvas(canvas); drawMap();
+  updateCoordPanel(); updateNavigation();
+}
+
+async function openGeoPdf(){
+  const p=currentProject();
+  const rec=await idbGet('files',`pdf:${p.id}`);
+  if(!rec){ return importPdf(); }
+  const url=URL.createObjectURL(rec.blob);
+  main.innerHTML=projectHeader()+`
+    <div class="info-banner">📍 O GPS continua ativo sobre a visualização. Neste beta web, a posição ainda não é colocada exatamente sobre a folha georreferenciada.</div>
+    <div class="pdf-view"><iframe src="${url}"></iframe></div>
+    <div class="card">
+      <div id="pdfGps">${state.gps?coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordPrimary):'Aguardando GPS…'}</div>
+      <div class="muted small">${state.gps?`Precisão ± ${state.gps.accuracy.toFixed(1)} m`:''}</div>
+    </div>`;
+}
+
+async function importPdf(){
+  const input=document.createElement('input'); input.type='file'; input.accept='application/pdf,.pdf';
+  input.onchange=async()=>{
+    const file=input.files[0]; if(!file)return;
+    const p=currentProject();
+    await idbPut('files',{key:`pdf:${p.id}`,blob:file,name:file.name,type:file.type});
+    p.geoPdfName=file.name; saveState(); toast('GeoPDF salvo no aparelho'); renderProject();
+  };
+  input.click();
+}
+
+async function importKml(){
+  const input=document.createElement('input'); input.type='file'; input.accept='.kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz';
+  input.onchange=async()=>{
+    const file=input.files[0]; if(!file)return;
+    if(file.name.toLowerCase().endsWith('.kmz')){
+      toast('KMZ está na lista do app, mas neste beta web use KML para visualizar a camada.');
+      const p=currentProject(); p.kmlNames=[...(p.kmlNames||[]),file.name]; saveState(); return;
+    }
+    const text=await file.text();
+    const features=parseKml(text);
+    state.mapFeatures.push(...features);
+    const p=currentProject(); p.kmlNames=[...(p.kmlNames||[]),file.name]; saveState();
+    await idbPut('files',{key:`kml:${p.id}:${uid()}`,blob:file,name:file.name,type:file.type});
+    state.mapView=null; toast(`${features.length} elemento(s) importado(s)`); renderMapTab();
+  };
+  input.click();
+}
+
+function parseKml(text){
+  const xml=new DOMParser().parseFromString(text,'text/xml');
+  const features=[];
+  [...xml.querySelectorAll('Placemark')].forEach(pm=>{
+    const name=pm.querySelector('name')?.textContent?.trim()||'Sem nome';
+    const add=(sel,type)=>{
+      pm.querySelectorAll(sel).forEach(node=>{
+        const c=node.querySelector('coordinates')?.textContent||'';
+        const pts=parseCoords(c); if(pts.length) features.push({name,type,points:pts});
+      });
+    };
+    add('Point','point'); add('LineString','line'); add('Polygon','polygon');
+  });
+  return features;
+}
+function parseCoords(text){
+  return text.trim().split(/\s+/).map(s=>s.split(',')).map(a=>({lon:+a[0],lat:+a[1]})).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon));
+}
+
+function showGoPointModal(){
+  openModal('Ir para ponto',`
+    <div class="note">Você pode tocar no mapa ou inserir latitude/longitude em graus decimais. Conversão UTM manual entra na próxima revisão do beta web.</div>
+    <div class="form-row"><label>Latitude</label><input id="destLat" inputmode="decimal" placeholder="-7.1234567"></div>
+    <div class="form-row"><label>Longitude</label><input id="destLon" inputmode="decimal" placeholder="-55.1234567"></div>
+    <div class="action-row">
+      <button id="setDest" class="primary">Navegar</button>
+      <button id="tapDest" class="secondary">Tocar no mapa</button>
+      <button id="clearDest" class="secondary danger">Cancelar destino</button>
+    </div>`);
+  $('#setDest').onclick=()=>{
+    const lat=parseFloat($('#destLat').value.replace(',','.')),lon=parseFloat($('#destLon').value.replace(',','.'));
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+    state.destination={lat,lon}; state.mode='browse'; modal.close(); renderMapTab();
+  };
+  $('#tapDest').onclick=()=>{state.mode='dest';modal.close();renderMapTab();toast('Toque no mapa para definir o destino')};
+  $('#clearDest').onclick=()=>{state.destination=null;modal.close();renderMapTab()};
+}
+
+function bindCanvas(canvas){
+  const handler=(ev)=>{
+    ev.preventDefault();
+    const r=canvas.getBoundingClientRect();
+    const touch=ev.touches?.[0]||ev;
+    const x=(touch.clientX-r.left)*canvas.width/r.width;
+    const y=(touch.clientY-r.top)*canvas.height/r.height;
+    const ll=canvasToLatLon(x,y);
+    if(!ll)return;
+    if(state.mode==='draw'){state.drawPoints.push(ll);drawMap();updateCoordPanel()}
+    else if(state.mode==='dest'){state.destination=ll;state.mode='browse';drawMap();updateNavigation()}
+  };
+  canvas.addEventListener('click',handler);
+}
+
+function fitCanvas(c){
+  const r=c.getBoundingClientRect(),dpr=Math.max(1,window.devicePixelRatio||1);
+  c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr);
+}
+function mapBounds(){
+  const pts=[];
+  state.mapFeatures.forEach(f=>pts.push(...f.points));
+  pts.push(...state.drawPoints);
+  if(state.gps)pts.push({lat:state.gps.latitude,lon:state.gps.longitude});
+  if(state.destination)pts.push(state.destination);
+  if(!pts.length)return {minLat:-7.01,maxLat:-6.99,minLon:-55.01,maxLon:-54.99};
+  let minLat=Math.min(...pts.map(p=>p.lat)),maxLat=Math.max(...pts.map(p=>p.lat)),minLon=Math.min(...pts.map(p=>p.lon)),maxLon=Math.max(...pts.map(p=>p.lon));
+  if(maxLat-minLat<.005){const m=(minLat+maxLat)/2;minLat=m-.0025;maxLat=m+.0025}
+  if(maxLon-minLon<.005){const m=(minLon+maxLon)/2;minLon=m-.0025;maxLon=m+.0025}
+  const padLat=(maxLat-minLat)*.14,padLon=(maxLon-minLon)*.14;
+  return {minLat:minLat-padLat,maxLat:maxLat+padLat,minLon:minLon-padLon,maxLon:maxLon+padLon};
+}
+function latLonToCanvas(p){
+  const c=$('#fieldCanvas'); if(!c)return null; const b=mapBounds(),pad=26;
+  const x=pad+(p.lon-b.minLon)/(b.maxLon-b.minLon)*(c.width-2*pad);
+  const y=pad+(b.maxLat-p.lat)/(b.maxLat-b.minLat)*(c.height-2*pad);
+  return {x,y};
+}
+function canvasToLatLon(x,y){
+  const c=$('#fieldCanvas'); if(!c)return null; const b=mapBounds(),pad=26;
+  const lon=b.minLon+((x-pad)/(c.width-2*pad))*(b.maxLon-b.minLon);
+  const lat=b.maxLat-((y-pad)/(c.height-2*pad))*(b.maxLat-b.minLat);
+  return {lat,lon};
+}
+function drawMap(){
+  const c=$('#fieldCanvas'); if(!c)return; const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  const grad=ctx.createLinearGradient(0,0,0,c.height);grad.addColorStop(0,'#1c2820');grad.addColorStop(1,'#202c24');ctx.fillStyle=grad;ctx.fillRect(0,0,c.width,c.height);
+
+  ctx.strokeStyle='#2e4034';ctx.lineWidth=1;
+  for(let i=1;i<6;i++){let x=c.width*i/6;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,c.height);ctx.stroke()}
+  for(let i=1;i<8;i++){let y=c.height*i/8;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(c.width,y);ctx.stroke()}
+
+  state.mapFeatures.forEach(f=>{
+    if(!f.points.length)return;
+    const pts=f.points.map(latLonToCanvas);ctx.lineWidth=3;
+    if(f.type==='polygon'){ctx.fillStyle='rgba(55,224,111,.13)';ctx.strokeStyle='#ffc857';ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fill();ctx.stroke()}
+    else if(f.type==='line'){ctx.strokeStyle='#ffc857';ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke()}
+    else {const p=pts[0];dot(ctx,p.x,p.y,8,'#ffc857');}
+  });
+
+  if(state.drawPoints.length){
+    const pts=state.drawPoints.map(latLonToCanvas);ctx.strokeStyle='#37e06f';ctx.lineWidth=4;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));if(pts.length>=3){ctx.closePath();ctx.fillStyle='rgba(55,224,111,.16)';ctx.fill()}ctx.stroke();pts.forEach(p=>dot(ctx,p.x,p.y,6,'#37e06f'));
+  }
+  if(state.gps){const p=latLonToCanvas({lat:state.gps.latitude,lon:state.gps.longitude});dot(ctx,p.x,p.y,11,'#37e06f');ctx.strokeStyle='white';ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,p.y,16,0,Math.PI*2);ctx.stroke()}
+  if(state.destination){const p=latLonToCanvas(state.destination);dot(ctx,p.x,p.y,11,'#ff5c6a')}
+}
+function dot(ctx,x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+
+function updateCoordPanel(){
+  if(!$('#coordMain'))return;
+  if(!state.gps){$('#coordMain').textContent='Aguardando localização…';$('#coordSub').textContent='';$('#accuracy').textContent='GPS —';return}
+  $('#coordMain').textContent=coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordPrimary);
+  $('#coordSub').textContent=state.settings.coordSecondaryEnabled?coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordSecondary):'';
+  $('#accuracy').textContent=`± ${state.gps.accuracy.toFixed(1)} m`;
+  $('#accuracy').style.color=state.gps.accuracy<=state.settings.accuracyGood?'#37e06f':state.gps.accuracy<=state.settings.accuracyMedium?'#ffc857':'#ff5c6a';
+  if(state.drawPoints.length>=3){
+    const sqm=polygonArea(state.drawPoints), per=polygonPerimeter(state.drawPoints);
+    const a1=areaConvert(sqm,state.settings.areaPrimary),a2=areaConvert(sqm,state.settings.areaSecondary);
+    $('#areaPill').textContent=`${a1.value.toFixed(state.settings.areaDecimals)} ${a1.unit}${state.settings.areaSecondaryEnabled?` • ${a2.value.toFixed(state.settings.areaDecimals)} ${a2.unit}`:''} • P ${per.toFixed(2)} m`;
+  } else $('#areaPill').textContent='';
+}
+function updateNavigation(){
+  const box=$('#navCompass'); if(!box)return;
+  if(!state.gps||!state.destination){box.classList.add('hidden');return}
+  box.classList.remove('hidden');
+  const d=haversine(state.gps.latitude,state.gps.longitude,state.destination.lat,state.destination.lon);
+  const b=bearing(state.gps.latitude,state.gps.longitude,state.destination.lat,state.destination.lon);
+  const rel=(b-state.heading+360)%360;
+  $('#navArrow').style.transform=`translate(-50%,-100%) rotate(${rel}deg)`;
+  $('#navDistance').textContent=d>=1000?`${(d/1000).toFixed(2)} km`:`${d.toFixed(1)} m`;
+  $('#navBearing').textContent=`Azimute ${b.toFixed(0)}°`;
+}
+
+async function renderPhotosTab(){
+  main.innerHTML=projectHeader()+`<div class="action-row" style="padding:0 12px 6px"><button id="newPhoto" class="primary">📷 Tirar foto</button></div><div id="photosGrid" class="photo-grid"></div>`;
+  $('#newPhoto').onclick=startCamera;
+  const p=currentProject(),items=await idbListByPrefix('photos',`photo:${p.id}:`);
+  const grid=$('#photosGrid');
+  if(!items.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhuma foto ainda.</div>';return}
+  grid.innerHTML=items.sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).map(item=>{
+    const url=URL.createObjectURL(item.blob);
+    return `<div class="photo-card"><img src="${url}"><div class="meta">${new Date(item.createdAt).toLocaleString('pt-BR')}<br>GPS ± ${item.meta.accuracy.toFixed(1)} m • ${item.meta.heading.toFixed(0)}°</div><div style="padding:0 8px 8px"><button class="secondary sharePhoto" data-key="${item.key}">Compartilhar</button></div></div>`;
+  }).join('');
+  grid.querySelectorAll('.sharePhoto').forEach(b=>b.onclick=()=>sharePhoto(b.dataset.key));
+}
+
+async function renderFilesTab(){
+  const p=currentProject();
+  main.innerHTML=projectHeader()+`
+    <div class="action-row" style="padding:0 12px 8px">
+      <button id="impPdf2" class="primary">Importar GeoPDF</button>
+      <button id="impKml2" class="secondary">Importar KML</button>
+    </div>
+    <div class="file-list">
+      <div class="file-item"><span>📄</span><div class="grow"><div class="name">${esc(p.geoPdfName||'Nenhum GeoPDF')}</div><div class="muted small">PDF local/offline</div></div></div>
+      ${(p.kmlNames||[]).map(n=>`<div class="file-item"><span>🧩</span><div class="grow"><div class="name">${esc(n)}</div><div class="muted small">Camada importada</div></div></div>`).join('')}
+    </div>`;
+  $('#impPdf2').onclick=importPdf; $('#impKml2').onclick=importKml;
+}
+
+async function startCamera(){
+  await requestSensors();
+  const layer=document.createElement('div');layer.className='camera-layer';layer.innerHTML=`
+    <video class="camera-video" autoplay playsinline muted></video>
+    <div class="camera-controls">
+      <button class="icon-btn camera-close">×</button>
+      <div class="camera-info"><div class="lf">LIMA FIELD</div><div id="camProject">${esc(currentProject().name)}</div><div id="camCoord">Aguardando GPS…</div><div id="camAcc"></div><div id="camHead"></div></div>
+      <div class="camera-compass"><div class="arrow"></div></div>
+      <button class="camera-shot" aria-label="Fotografar"></button>
+    </div>`;
+  document.body.appendChild(layer);
+  const video=layer.querySelector('video');
+  let stream=null;
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
+    video.srcObject=stream;
+  }catch(err){
+    layer.remove();
+    return fallbackPhotoInput();
+  }
+  const close=()=>{stream?.getTracks().forEach(t=>t.stop());layer.remove()};
+  layer.querySelector('.camera-close').onclick=close;
+  const refresh=()=>{
+    if(!layer.isConnected)return;
+    if(state.gps){layer.querySelector('#camCoord').textContent=coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordPrimary);layer.querySelector('#camAcc').textContent=`GPS ± ${state.gps.accuracy.toFixed(1)} m`;}
+    layer.querySelector('#camHead').textContent=`Direção ${state.heading.toFixed(0)}° ${cardinal(state.heading)}`;
+    layer.querySelector('.camera-compass .arrow').style.transform=`translate(-50%,-100%) rotate(${state.heading}deg)`;
+    requestAnimationFrame(refresh);
+  };refresh();
+  layer.querySelector('.camera-shot').onclick=async()=>{
+    if(!state.gps){toast('Aguardando GPS');return}
+    const canvas=document.createElement('canvas');
+    canvas.width=video.videoWidth||1920;canvas.height=video.videoHeight||1080;
+    const ctx=canvas.getContext('2d');ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    drawPhotoStamp(ctx,canvas.width,canvas.height,currentProject().name,state.gps,state.heading);
+    const jpeg=await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.95));
+    const exifJpeg=await insertGpsExif(jpeg,state.gps,state.heading);
+    const key=`photo:${currentProject().id}:${uid()}`;
+    await idbPut('photos',{key,blob:exifJpeg,createdAt:new Date().toISOString(),meta:{lat:state.gps.latitude,lon:state.gps.longitude,altitude:state.gps.altitude||0,accuracy:state.gps.accuracy,heading:state.heading}});
+    const p=currentProject();p.photos=(p.photos||0)+1;saveState();close();toast('Foto salva com GPS no JPEG');renderPhotosTab();
+  };
+}
+async function fallbackPhotoInput(){
+  const input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
+  input.onchange=async()=>{const f=input.files[0];if(!f||!state.gps)return;const bmp=await createImageBitmap(f);const c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;const ctx=c.getContext('2d');ctx.drawImage(bmp,0,0);drawPhotoStamp(ctx,c.width,c.height,currentProject().name,state.gps,state.heading);const jpeg=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));const exif=await insertGpsExif(jpeg,state.gps,state.heading);const key=`photo:${currentProject().id}:${uid()}`;await idbPut('photos',{key,blob:exif,createdAt:new Date().toISOString(),meta:{lat:state.gps.latitude,lon:state.gps.longitude,altitude:state.gps.altitude||0,accuracy:state.gps.accuracy,heading:state.heading}});const p=currentProject();p.photos=(p.photos||0)+1;saveState();renderPhotosTab();};
+  input.click();
+}
+
+function drawPhotoStamp(ctx,w,h,project,gps,heading){
+  const scale=Math.max(1,w/1200),m=24*scale;
+  ctx.save();ctx.font=`900 ${18*scale}px -apple-system`;ctx.textBaseline='top';ctx.lineJoin='round';ctx.lineWidth=4*scale;ctx.strokeStyle='rgba(0,0,0,.9)';
+  const lines=[
+    ['LIMA FIELD','#37e06f',26*scale],
+    [project,'#fff',18*scale],
+    [new Date().toLocaleString('pt-BR'),'#fff',17*scale],
+    [coordFormat(gps.latitude,gps.longitude,state.settings.coordPrimary),'#fff',17*scale],
+    [`GPS ± ${gps.accuracy.toFixed(1)} m`,'#fff',17*scale],
+    ...(state.settings.showAltitudeOnPhoto?[[`Alt. ${(gps.altitude||0).toFixed(1)} m`,'#fff',17*scale]]:[]),
+    [`Direção ${heading.toFixed(0)}° ${cardinal(heading)}`,'#fff',17*scale]
+  ];
+  let y=h-m-lines.reduce((s,l)=>s+l[2]*1.45,0);
+  for(const [text,color,size] of lines){ctx.font=`900 ${size}px -apple-system`;ctx.strokeText(text,m,y);ctx.fillStyle=color;ctx.fillText(text,m,y);y+=size*1.45}
+  const cx=w-92*scale,cy=h-92*scale,r=58*scale;ctx.lineWidth=3*scale;ctx.strokeStyle='#fff';ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#fff';ctx.font=`900 ${14*scale}px -apple-system`;ctx.textAlign='center';ctx.fillText('N',cx,cy-r+4*scale);
+  ctx.translate(cx,cy);ctx.rotate(heading*Math.PI/180);ctx.fillStyle='#37e06f';ctx.beginPath();ctx.moveTo(0,-r+12*scale);ctx.lineTo(-10*scale,10*scale);ctx.lineTo(10*scale,10*scale);ctx.closePath();ctx.fill();ctx.restore();
+}
+async function sharePhoto(key){
+  const item=await idbGet('photos',key);if(!item)return;
+  const file=new File([item.blob],`Lima_Field_${item.createdAt.replace(/[:.]/g,'-')}.jpg`,{type:'image/jpeg'});
+  if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:'Lima Field'});}
+  else{const a=document.createElement('a');a.href=URL.createObjectURL(item.blob);a.download=file.name;a.click();}
+}
+
+/* Minimal EXIF APP1 GPS writer for the JPEG created by canvas. */
+async function insertGpsExif(blob,gps,heading){
+  const jpg=new Uint8Array(await blob.arrayBuffer());
+  if(jpg[0]!==0xFF||jpg[1]!==0xD8)return blob;
+  const exif=buildExif(gps,heading);
+  const out=new Uint8Array(2+exif.length+jpg.length-2);
+  out.set(jpg.slice(0,2),0);out.set(exif,2);out.set(jpg.slice(2),2+exif.length);
+  return new Blob([out],{type:'image/jpeg'});
+}
+function buildExif(gps,heading){
+  // APP1 payload = Exif\0\0 + TIFF little-endian.
+  const lat=degToDmsRational(Math.abs(gps.latitude)), lon=degToDmsRational(Math.abs(gps.longitude));
+  const alt=[Math.round(Math.abs(gps.altitude||0)*1000),1000];
+  const acc=[Math.round(gps.accuracy*1000),1000], dir=[Math.round(((heading%360)+360)%360*1000),1000];
+  const now=new Date(), gpsDate=`${now.getUTCFullYear()}:${String(now.getUTCMonth()+1).padStart(2,'0')}:${String(now.getUTCDate()).padStart(2,'0')}\0`;
+  const latRef=(gps.latitude>=0?'N':'S')+'\0', lonRef=(gps.longitude>=0?'E':'W')+'\0', t=[ [now.getUTCHours(),1],[now.getUTCMinutes(),1],[now.getUTCSeconds(),1] ];
+  const entries=[
+    {tag:0x0000,type:1,count:4,inline:new Uint8Array([2,3,0,0])},
+    {tag:0x0001,type:2,count:2,ascii:latRef},
+    {tag:0x0002,type:5,count:3,rats:lat},
+    {tag:0x0003,type:2,count:2,ascii:lonRef},
+    {tag:0x0004,type:5,count:3,rats:lon},
+    {tag:0x0005,type:1,count:1,inline:new Uint8Array([gps.altitude<0?1:0])},
+    {tag:0x0006,type:5,count:1,rats:[alt]},
+    {tag:0x0007,type:5,count:3,rats:t},
+    {tag:0x0010,type:2,count:2,ascii:'T\0'},
+    {tag:0x0011,type:5,count:1,rats:[dir]},
+    {tag:0x001D,type:2,count:gpsDate.length,ascii:gpsDate},
+    {tag:0x001F,type:5,count:1,rats:[acc]}
+  ];
+  const ifd0Count=1, ifd0Size=2+12*ifd0Count+4, gpsIfdOffset=8+ifd0Size, gpsIfdSize=2+12*entries.length+4;
+  let dataOffset=gpsIfdOffset+gpsIfdSize;
+  const extras=[];
+  for(const e of entries){
+    const size=typeSize(e.type)*e.count;
+    if(size>4){
+      e.offset=dataOffset;
+      let bytes;
+      if(e.rats){bytes=new Uint8Array(e.rats.length*8);const dv=new DataView(bytes.buffer);e.rats.forEach((r,i)=>{dv.setUint32(i*8,r[0],true);dv.setUint32(i*8+4,r[1],true)})}
+      else if(e.ascii){bytes=new TextEncoder().encode(e.ascii)}
+      else bytes=new Uint8Array(size);
+      extras.push({offset:dataOffset,bytes});dataOffset+=bytes.length;
+    }
+  }
+  const tiff=new Uint8Array(dataOffset), dv=new DataView(tiff.buffer);
+  tiff[0]=0x49;tiff[1]=0x49;dv.setUint16(2,42,true);dv.setUint32(4,8,true);
+  dv.setUint16(8,1,true);
+  let o=10;dv.setUint16(o,0x8825,true);dv.setUint16(o+2,4,true);dv.setUint32(o+4,1,true);dv.setUint32(o+8,gpsIfdOffset,true);dv.setUint32(8+2+12,0,true);
+  dv.setUint16(gpsIfdOffset,entries.length,true);o=gpsIfdOffset+2;
+  for(const e of entries){
+    dv.setUint16(o,e.tag,true);dv.setUint16(o+2,e.type,true);dv.setUint32(o+4,e.count,true);
+    const size=typeSize(e.type)*e.count;
+    if(size<=4){
+      const tmp=new Uint8Array(4); if(e.inline)tmp.set(e.inline.slice(0,4)); else if(e.ascii)tmp.set(new TextEncoder().encode(e.ascii).slice(0,4));
+      tiff.set(tmp,o+8);
+    }else dv.setUint32(o+8,e.offset,true);
+    o+=12;
+  }
+  dv.setUint32(o,0,true); extras.forEach(x=>tiff.set(x.bytes,x.offset));
+  const payload=new Uint8Array(6+tiff.length);payload.set(new Uint8Array([0x45,0x78,0x69,0x66,0,0]),0);payload.set(tiff,6);
+  const seg=new Uint8Array(4+payload.length),sdv=new DataView(seg.buffer);seg[0]=0xFF;seg[1]=0xE1;sdv.setUint16(2,payload.length+2,false);seg.set(payload,4);return seg;
+}
+function typeSize(t){return t===1||t===2?1:t===3?2:t===4?4:t===5?8:1}
+function degToDmsRational(d){const deg=Math.floor(d),mf=(d-deg)*60,min=Math.floor(mf),sec=(mf-min)*60;return [[deg,1],[min,1],[Math.round(sec*100000),100000]]}
+
+/* Coordinates */
+function coordFormat(lat,lon,fmt){
+  if(fmt==='dd')return `${lat.toFixed(7)}, ${lon.toFixed(7)}`;
+  if(fmt==='dms')return `${dms(lat,true)}  ${dms(lon,false)}`;
+  if(fmt==='ddm')return `${ddm(lat,true)}  ${ddm(lon,false)}`;
+  const u=toUtm(lat,lon,state.settings.utmAuto?null:+state.settings.utmZone);
+  return `E ${u.e.toFixed(2)} | N ${u.n.toFixed(2)} | ${u.zone}${u.hemi}`;
+}
+function dms(v,isLat){const a=Math.abs(v),d=Math.floor(a),mf=(a-d)*60,m=Math.floor(mf),s=(mf-m)*60,h=isLat?(v>=0?'N':'S'):(v>=0?'E':'W');return `${String(d).padStart(2,'0')}°${String(m).padStart(2,'0')}'${s.toFixed(2)}"${h}`}
+function ddm(v,isLat){const a=Math.abs(v),d=Math.floor(a),m=(a-d)*60,h=isLat?(v>=0?'N':'S'):(v>=0?'E':'W');return `${String(d).padStart(2,'0')}°${m.toFixed(5)}'${h}`}
+function toUtm(lat,lon,forcedZone){
+  const zone=forcedZone||Math.floor((lon+180)/6)+1,lon0=(zone-1)*6-180+3;
+  const a=6378137,invF=state.settings.datum==='sirgas2000'?298.257222101:298.257223563,f=1/invF,e2=f*(2-f),ep2=e2/(1-e2),k0=.9996;
+  const r=Math.PI/180,phi=lat*r,lam=lon*r,lam0=lon0*r,s=Math.sin(phi),c=Math.cos(phi),t=Math.tan(phi),N=a/Math.sqrt(1-e2*s*s),T=t*t,C=ep2*c*c,A=c*(lam-lam0);
+  const M=a*((1-e2/4-3*e2*e2/64-5*e2**3/256)*phi-(3*e2/8+3*e2*e2/32+45*e2**3/1024)*Math.sin(2*phi)+(15*e2*e2/256+45*e2**3/1024)*Math.sin(4*phi)-(35*e2**3/3072)*Math.sin(6*phi));
+  const E=k0*N*(A+(1-T+C)*A**3/6+(5-18*T+T*T+72*C-58*ep2)*A**5/120)+500000;
+  let North=k0*(M+N*t*(A*A/2+(5-T+9*C+4*C*C)*A**4/24+(61-58*T+T*T+600*C-330*ep2)*A**6/720));if(lat<0)North+=10000000;
+  return {e:E,n:North,zone,hemi:lat>=0?'N':'S'};
+}
+function areaConvert(sqm,u){
+  if(u==='ha')return {value:sqm/10000,unit:'ha'};
+  if(u==='alq_sp')return {value:sqm/24200,unit:'alq. paulista'};
+  if(u==='alq_mg')return {value:sqm/48400,unit:'alqueirão'};
+  if(u==='m2')return {value:sqm,unit:'m²'};
+  return {value:sqm/state.settings.customAreaSqm,unit:state.settings.customAreaName};
+}
+function polygonArea(pts){
+  if(pts.length<3)return 0;
+  const avg=pts.reduce((s,p)=>s+p.lon,0)/pts.length,zone=Math.floor((avg+180)/6)+1;
+  const xy=pts.map(p=>toUtm(p.lat,p.lon,zone));let a=0;
+  for(let i=0;i<xy.length;i++){const p=xy[i],q=xy[(i+1)%xy.length];a+=p.e*q.n-q.e*p.n}return Math.abs(a)/2;
+}
+function polygonPerimeter(pts){let p=0;for(let i=0;i<pts.length;i++)p+=haversine(pts[i].lat,pts[i].lon,pts[(i+1)%pts.length].lat,pts[(i+1)%pts.length].lon);return p}
+function haversine(a,b,c,d){const R=6371008.8,r=Math.PI/180,dp=(c-a)*r,dl=(d-b)*r,x=Math.sin(dp/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dl/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+function bearing(a,b,c,d){const r=Math.PI/180,p1=a*r,p2=c*r,dl=(d-b)*r,y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (Math.atan2(y,x)/r+360)%360}
+function cardinal(h){return ['N','NE','E','SE','S','SW','W','NW'][Math.round(((h%360)+360)%360/45)%8]}
+
+/* Sensors */
+async function requestSensors(){
+  if(navigator.geolocation){
+    navigator.geolocation.watchPosition(pos=>{
+      state.gps={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,altitude:pos.coords.altitude||0};
+      updateCoordPanel();updateNavigation();drawMap();
+    },err=>toast('GPS: '+err.message),{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+  }
+  try{
+    if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+      const res=await DeviceOrientationEvent.requestPermission();state.orientationGranted=res==='granted';
+    }else state.orientationGranted=true;
+    if(state.orientationGranted&&!requestSensors._ori){
+      window.addEventListener('deviceorientation',e=>{
+        let h=typeof e.webkitCompassHeading==='number'?e.webkitCompassHeading:(360-(e.alpha||0));
+        state.heading=(h+360)%360;updateNavigation();
+      },true);requestSensors._ori=true;
+    }
+  }catch(_){}
+}
+
+/* Settings */
+function renderSettings(){
+  openModal('Configurações',`
+    <h3>Coordenadas</h3>
+    ${selectRow('Principal','coordPrimary',[['utm','UTM'],['dms','Graus, minutos e segundos'],['dd','Graus decimais'],['ddm','Graus e minutos decimais']])}
+    ${switchRow('Mostrar coordenada secundária','coordSecondaryEnabled')}
+    ${selectRow('Secundária','coordSecondary',[['dms','Graus, minutos e segundos'],['dd','Graus decimais'],['utm','UTM'],['ddm','Graus e minutos decimais']])}
+    ${selectRow('Datum','datum',[['sirgas2000','SIRGAS 2000'],['wgs84','WGS 84']])}
+    ${switchRow('Fuso UTM automático','utmAuto')}
+    <div class="form-row"><label>Fuso UTM manual</label><input id="utmZone" type="number" min="1" max="60" value="${state.settings.utmZone}"></div>
+    <h3>Área</h3>
+    ${selectRow('Unidade principal','areaPrimary',[['ha','Hectares'],['alq_sp','Alqueire paulista'],['alq_mg','Alqueirão / mineiro'],['m2','m²']])}
+    ${switchRow('Mostrar unidade secundária','areaSecondaryEnabled')}
+    ${selectRow('Unidade secundária','areaSecondary',[['alq_mg','Alqueirão / mineiro'],['alq_sp','Alqueire paulista'],['ha','Hectares'],['m2','m²']])}
+    <div class="form-row"><label>Casas decimais</label><select id="areaDecimals">${[2,3,4,5,6].map(n=>`<option ${n==state.settings.areaDecimals?'selected':''}>${n}</option>`).join('')}</select></div>
+    <h3>Foto</h3>
+    ${switchRow('Mostrar altitude','showAltitudeOnPhoto')}
+    ${switchRow('Mostrar coordenada secundária na foto','showSecondaryOnPhoto')}
+    <div class="note">A foto do beta web é gerada em JPEG com GPS EXIF e direção, além das informações visíveis sem fundo escuro.</div>
+    <br><button id="saveSettings" class="primary">Salvar</button>`);
+  $('#saveSettings').onclick=()=>{
+    ['coordPrimary','coordSecondary','datum','areaPrimary','areaSecondary'].forEach(k=>state.settings[k]=$('#'+k).value);
+    ['coordSecondaryEnabled','utmAuto','areaSecondaryEnabled','showAltitudeOnPhoto','showSecondaryOnPhoto'].forEach(k=>state.settings[k]=$('#'+k).checked);
+    state.settings.utmZone=+$('#utmZone').value||21;state.settings.areaDecimals=+$('#areaDecimals').value||4;saveState();modal.close();renderProjectOrHome();toast('Configurações salvas');
+  };
+}
+function selectRow(label,key,opts){return `<div class="form-row"><label>${label}</label><select id="${key}">${opts.map(([v,t])=>`<option value="${v}" ${state.settings[key]===v?'selected':''}>${t}</option>`).join('')}</select></div>`}
+function switchRow(label,key){return `<div class="switch-row"><span>${label}</span><input id="${key}" type="checkbox" ${state.settings[key]?'checked':''}></div>`}
+function renderProjectOrHome(){state.currentProjectId?renderProject():renderHome()}
+
+/* IndexedDB */
+const DB='lima-field-db',VER=1;
+function dbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,VER);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains('files'))db.createObjectStore('files',{keyPath:'key'});if(!db.objectStoreNames.contains('photos'))db.createObjectStore('photos',{keyPath:'key'})};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function idbPut(store,val){const db=await dbOpen();return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(val);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+async function idbGet(store,key){const db=await dbOpen();return new Promise((res,rej)=>{const r=db.transaction(store).objectStore(store).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function idbListByPrefix(store,prefix){const db=await dbOpen();return new Promise((res,rej)=>{const r=db.transaction(store).objectStore(store).getAll();r.onsuccess=()=>res(r.result.filter(x=>x.key.startsWith(prefix)));r.onerror=()=>rej(r.error)})}
+
+function esc(s=''){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+
+window.addEventListener('resize',()=>{const c=$('#fieldCanvas');if(c){fitCanvas(c);drawMap()}});
+renderHome();
+
+</script>
+</body>
+</html>
