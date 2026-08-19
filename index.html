@@ -138,6 +138,18 @@ h1{font-size:28px;margin-bottom:6px}
   border-radius:0;
 }
 
+
+.form-row label,.switch-row span,.modal-card h3,.modal-head h2{color:var(--green)!important;font-weight:800}
+.form-row input::placeholder,.camera-label::placeholder{color:#89a194}
+.form-row select, .form-row input, .form-row select option{color:#fff;background:#111713}
+.switch-row{color:#dce6de}
+.home-actions{margin-top:10px}
+.quick-note{margin-top:10px;font-size:12px;color:#9fb0a5}
+.camera-label-wrap{position:absolute;left:15px;right:15px;bottom:calc(214px + var(--safe-bottom));pointer-events:auto}
+.camera-label{width:100%;border:1px solid rgba(255,255,255,.35);border-radius:14px;padding:12px 14px;background:rgba(16,21,18,.66);color:#fff;font-weight:800;backdrop-filter:blur(8px)}
+.camera-tagline{color:#d8f5df;margin-bottom:3px;font-size:11px}
+.photo-label-chip{display:inline-block;margin-bottom:6px;padding:4px 8px;border-radius:999px;background:#223128;color:#37e06f;font-weight:900;font-size:11px}
+
 </style>
 </head>
 <body>
@@ -247,17 +259,23 @@ bottomNav.addEventListener('click',e=>{
   state.tab=b.dataset.tab; renderProject();
 });
 
-function renderHome(){
+async function renderHome(){
   backBtn.classList.add('hidden'); bottomNav.classList.add('hidden');
+  const quickItems = await idbListByPrefix('photos','photo:quick:');
   main.innerHTML = `
     <section class="home-hero">
       <div class="kicker">CAMPO OFFLINE</div>
       <h1>Seus projetos</h1>
       <p class="muted">GeoPDF, GPS, fotos, KML e medições em um só lugar.</p>
-      <button id="newProject" class="primary">+ Novo projeto</button>
+      <div class="action-row home-actions">
+        <button id="newProject" class="primary">+ Novo projeto</button>
+        <button id="quickPhoto" class="secondary">📷 Foto rápida</button>
+      </div>
+      <div class="quick-note">${quickItems.length ? `${quickItems.length} foto(s) rápida(s) salva(s) no aparelho.` : 'Você também pode tirar foto sem criar projeto.'}</div>
     </section>
     <section id="projectList"></section>`;
   $('#newProject').onclick=createProjectModal;
+  $('#quickPhoto').onclick=()=>startCamera({projectId:'quick',projectName:'Foto rápida'});
   const list=$('#projectList');
   if(!state.projects.length){list.innerHTML='<div class="empty">Crie o primeiro projeto para começar.</div>';return}
   list.innerHTML=state.projects.map(p=>`
@@ -507,13 +525,14 @@ function updateNavigation(){
 
 async function renderPhotosTab(){
   main.innerHTML=projectHeader()+`<div class="action-row" style="padding:0 12px 6px"><button id="newPhoto" class="primary">📷 Tirar foto</button></div><div id="photosGrid" class="photo-grid"></div>`;
-  $('#newPhoto').onclick=startCamera;
+  $('#newPhoto').onclick=()=>startCamera();
   const p=currentProject(),items=await idbListByPrefix('photos',`photo:${p.id}:`);
   const grid=$('#photosGrid');
   if(!items.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhuma foto ainda.</div>';return}
   grid.innerHTML=items.sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).map(item=>{
     const url=URL.createObjectURL(item.blob);
-    return `<div class="photo-card"><img src="${url}"><div class="meta">${new Date(item.createdAt).toLocaleString('pt-BR')}<br>GPS ± ${item.meta.accuracy.toFixed(1)} m • ${item.meta.heading.toFixed(0)}°</div><div style="padding:0 8px 8px"><button class="secondary sharePhoto" data-key="${item.key}">Compartilhar</button></div></div>`;
+    const label=item.meta?.label?`<span class="photo-label-chip">${esc(item.meta.label)}</span><br>`:'';
+    return `<div class="photo-card"><img src="${url}"><div class="meta">${label}${new Date(item.createdAt).toLocaleString('pt-BR')}<br>GPS ± ${item.meta.accuracy.toFixed(1)} m • ${item.meta.heading.toFixed(0)}°</div><div style="padding:0 8px 8px"><button class="secondary sharePhoto" data-key="${item.key}">Compartilhar</button></div></div>`;
   }).join('');
   grid.querySelectorAll('.sharePhoto').forEach(b=>b.onclick=()=>sharePhoto(b.dataset.key));
 }
@@ -532,13 +551,17 @@ async function renderFilesTab(){
   $('#impPdf2').onclick=importPdf; $('#impKml2').onclick=importKml;
 }
 
-async function startCamera(){
+async function startCamera(options={}){
   await requestSensors();
+  const activeProject = currentProject();
+  const projectId = options.projectId || activeProject?.id || 'quick';
+  const projectName = options.projectName || activeProject?.name || 'Foto rápida';
   const layer=document.createElement('div');layer.className='camera-layer';layer.innerHTML=`
     <video class="camera-video" autoplay playsinline muted></video>
     <div class="camera-controls">
       <button class="icon-btn camera-close">×</button>
-      <div class="camera-info"><div class="lf">LIMA FIELD</div><div id="camProject">${esc(currentProject().name)}</div><div id="camCoord">Aguardando GPS…</div><div id="camAcc"></div><div id="camHead"></div></div>
+      <div class="camera-label-wrap"><div class="camera-tagline">Identificação da foto</div><input id="photoLabel" class="camera-label" placeholder="Ex.: Marco M-01, Cerca norte, Divisa, APP"></div>
+      <div class="camera-info"><div class="lf">LIMA FIELD</div><div id="camProject">${esc(projectName)}</div><div id="camCoord">Aguardando GPS…</div><div id="camAcc"></div><div id="camHead"></div></div>
       <div class="camera-compass"><div class="arrow"></div></div>
       <button class="camera-shot" aria-label="Fotografar"></button>
     </div>`;
@@ -550,7 +573,7 @@ async function startCamera(){
     video.srcObject=stream;
   }catch(err){
     layer.remove();
-    return fallbackPhotoInput();
+    return fallbackPhotoInput({projectId,projectName});
   }
   const close=()=>{stream?.getTracks().forEach(t=>t.stop());layer.remove()};
   layer.querySelector('.camera-close').onclick=close;
@@ -563,31 +586,56 @@ async function startCamera(){
   };refresh();
   layer.querySelector('.camera-shot').onclick=async()=>{
     if(!state.gps){toast('Aguardando GPS');return}
+    const label=normalizePhotoLabel(layer.querySelector('#photoLabel').value);
     const canvas=document.createElement('canvas');
     canvas.width=video.videoWidth||1920;canvas.height=video.videoHeight||1080;
     const ctx=canvas.getContext('2d');ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    drawPhotoStamp(ctx,canvas.width,canvas.height,currentProject().name,state.gps,state.heading);
+    drawPhotoStamp(ctx,canvas.width,canvas.height,projectName,state.gps,state.heading,label);
     const jpeg=await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.95));
     const exifJpeg=await insertGpsExif(jpeg,state.gps,state.heading);
-    const key=`photo:${currentProject().id}:${uid()}`;
-    await idbPut('photos',{key,blob:exifJpeg,createdAt:new Date().toISOString(),meta:{lat:state.gps.latitude,lon:state.gps.longitude,altitude:state.gps.altitude||0,accuracy:state.gps.accuracy,heading:state.heading}});
-    const p=currentProject();p.photos=(p.photos||0)+1;saveState();close();toast('Foto salva com GPS no JPEG');renderPhotosTab();
+    const key=`photo:${projectId}:${uid()}`;
+    await idbPut('photos',{key,blob:exifJpeg,createdAt:new Date().toISOString(),meta:{lat:state.gps.latitude,lon:state.gps.longitude,altitude:state.gps.altitude||0,accuracy:state.gps.accuracy,heading:state.heading,label,projectName,projectId}});
+    if(projectId!=='quick' && activeProject){activeProject.photos=(activeProject.photos||0)+1; saveState();}
+    else{saveState();}
+    close();toast(label ? `Foto salva: ${label}` : 'Foto salva com GPS no JPEG');
+    projectId==='quick' ? renderHome() : renderPhotosTab();
   };
 }
-async function fallbackPhotoInput(){
+async function fallbackPhotoInput(options={}){
+  const activeProject = currentProject();
+  const projectId = options.projectId || activeProject?.id || 'quick';
+  const projectName = options.projectName || activeProject?.name || 'Foto rápida';
+  const typed = prompt('Nome da foto (opcional):', '') || '';
   const input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
-  input.onchange=async()=>{const f=input.files[0];if(!f||!state.gps)return;const bmp=await createImageBitmap(f);const c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;const ctx=c.getContext('2d');ctx.drawImage(bmp,0,0);drawPhotoStamp(ctx,c.width,c.height,currentProject().name,state.gps,state.heading);const jpeg=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));const exif=await insertGpsExif(jpeg,state.gps,state.heading);const key=`photo:${currentProject().id}:${uid()}`;await idbPut('photos',{key,blob:exif,createdAt:new Date().toISOString(),meta:{lat:state.gps.latitude,lon:state.gps.longitude,altitude:state.gps.altitude||0,accuracy:state.gps.accuracy,heading:state.heading}});const p=currentProject();p.photos=(p.photos||0)+1;saveState();renderPhotosTab();};
+  input.onchange=async()=>{
+    const f=input.files[0];if(!f||!state.gps)return;
+    const label=normalizePhotoLabel(typed);
+    const bmp=await createImageBitmap(f);const c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;const ctx=c.getContext('2d');ctx.drawImage(bmp,0,0);
+    drawPhotoStamp(ctx,c.width,c.height,projectName,state.gps,state.heading,label);
+    const jpeg=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));
+    const exif=await insertGpsExif(jpeg,state.gps,state.heading);
+    const key=`photo:${projectId}:${uid()}`;
+    await idbPut('photos',{key,blob:exif,createdAt:new Date().toISOString(),meta:{lat:state.gps.latitude,lon:state.gps.longitude,altitude:state.gps.altitude||0,accuracy:state.gps.accuracy,heading:state.heading,label,projectName,projectId}});
+    if(projectId!=='quick' && activeProject){activeProject.photos=(activeProject.photos||0)+1; saveState();} else {saveState();}
+    toast(label ? `Foto salva: ${label}` : 'Foto salva com GPS no JPEG');
+    projectId==='quick' ? renderHome() : renderPhotosTab();
+  };
   input.click();
 }
+function normalizePhotoLabel(value=''){
+  return value.trim().replace(/\s+/g,' ').slice(0,60);
+}
 
-function drawPhotoStamp(ctx,w,h,project,gps,heading){
+function drawPhotoStamp(ctx,w,h,project,gps,heading,label=''){
   const scale=Math.max(1,w/1200),m=24*scale;
   ctx.save();ctx.font=`900 ${18*scale}px -apple-system`;ctx.textBaseline='top';ctx.lineJoin='round';ctx.lineWidth=4*scale;ctx.strokeStyle='rgba(0,0,0,.9)';
   const lines=[
-    ['LIMA FIELD','#37e06f',26*scale],
-    [project,'#fff',18*scale],
+    ...(label?[[label.toUpperCase(),'#37e06f',24*scale]]:[]),
+    ['LIMA FIELD','#37e06f',19*scale],
+    ...(project && project!=='Foto rápida'?[[project,'#fff',17*scale]]:[]),
     [new Date().toLocaleString('pt-BR'),'#fff',17*scale],
     [coordFormat(gps.latitude,gps.longitude,state.settings.coordPrimary),'#fff',17*scale],
+    ...(state.settings.showSecondaryOnPhoto?[[coordFormat(gps.latitude,gps.longitude,state.settings.coordSecondary),'#d9e4dc',15*scale]]:[]),
     [`GPS ± ${gps.accuracy.toFixed(1)} m`,'#fff',17*scale],
     ...(state.settings.showAltitudeOnPhoto?[[`Alt. ${(gps.altitude||0).toFixed(1)} m`,'#fff',17*scale]]:[]),
     [`Direção ${heading.toFixed(0)}° ${cardinal(heading)}`,'#fff',17*scale]
@@ -599,7 +647,8 @@ function drawPhotoStamp(ctx,w,h,project,gps,heading){
 }
 async function sharePhoto(key){
   const item=await idbGet('photos',key);if(!item)return;
-  const file=new File([item.blob],`Lima_Field_${item.createdAt.replace(/[:.]/g,'-')}.jpg`,{type:'image/jpeg'});
+  const baseLabel=(item.meta?.label||'Lima_Field').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'')||'Lima_Field';
+  const file=new File([item.blob],`${baseLabel}_${item.createdAt.replace(/[:.]/g,'-')}.jpg`,{type:'image/jpeg'});
   if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:'Lima Field'});}
   else{const a=document.createElement('a');a.href=URL.createObjectURL(item.blob);a.download=file.name;a.click();}
 }
