@@ -28,6 +28,8 @@ button{cursor:pointer}
 .topbar-actions{margin-left:auto;display:flex;gap:8px}
 .icon-btn{width:42px;height:42px;border:0;border-radius:13px;background:#202a23;color:white;font-size:22px;font-weight:700}
 .icon-btn:active{transform:scale(.96)}
+#gpsBtn.locating{color:var(--green);box-shadow:0 0 0 2px rgba(55,224,111,.28) inset;animation:gpsPulse 1s ease-in-out infinite alternate}
+@keyframes gpsPulse{to{background:#294432;transform:scale(1.04)}}
 #main{flex:1;overflow:auto;padding-bottom:calc(76px + var(--safe-bottom))}
 .hidden{display:none!important}
 
@@ -59,7 +61,7 @@ h1{font-size:28px;margin-bottom:6px}
 
 .project-title{padding:13px 14px 0}
 .project-title h1{font-size:23px}
-.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:9px}
+.quick-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;padding:9px}
 .quick-btn{min-height:68px;border:1px solid #2c382f;background:#151d18;color:white;border-radius:15px;font-size:12px;padding:8px 4px}
 .quick-btn b{display:block;font-size:22px;margin-bottom:4px}
 .quick-btn.active{background:var(--green);color:#041008}
@@ -80,14 +82,20 @@ h1{font-size:28px;margin-bottom:6px}
 .nav-distance{font-weight:900;margin-top:6px}
 .nav-bearing{font-size:12px;color:var(--muted)}
 
-.pdf-view{margin:10px;height:70vh;border-radius:18px;overflow:hidden;border:1px solid #2a372e;background:white}
+.pdf-view{position:relative;margin:10px;height:70vh;border-radius:18px;overflow:hidden;border:1px solid #2a372e;background:white}
 .pdf-view iframe{width:100%;height:100%;border:0}
+.pdf-view.georef{height:auto;max-height:70vh}
+.pdf-gps-marker{display:none;position:absolute;z-index:8;width:24px;height:24px;border:4px solid white;border-radius:50%;background:var(--green);box-shadow:0 0 0 9px rgba(55,224,111,.22),0 2px 8px #000;transform:translate(-50%,-50%);pointer-events:none}
+.pdf-gps-marker.visible{display:block;animation:markerPulse 1s ease-in-out infinite alternate}
+@keyframes markerPulse{to{box-shadow:0 0 0 15px rgba(55,224,111,.08),0 2px 8px #000}}
 .info-banner{margin:10px 12px;padding:11px 13px;border-radius:14px;background:#18231d;border:1px solid #2f4135;font-size:13px}
 
 .photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}
 .photo-card{border-radius:15px;overflow:hidden;background:var(--panel);border:1px solid #2a352d}
 .photo-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
 .photo-card .meta{padding:8px;font-size:11px;color:var(--muted)}
+.photo-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 8px 8px}
+.photo-actions button{padding:10px 7px;font-size:11px}
 .file-list{padding:9px}
 .file-item{display:flex;align-items:center;gap:10px;padding:13px;border-bottom:1px solid #263128}
 .file-item .grow{flex:1;min-width:0}
@@ -115,6 +123,8 @@ h1{font-size:28px;margin-bottom:6px}
 .camera-shot::after{content:"";position:absolute;inset:7px;background:var(--green);border-radius:50%}
 .camera-info{position:absolute;left:15px;right:112px;bottom:calc(128px + var(--safe-bottom));color:white;font-weight:800;font-size:13px;text-shadow:0 1px 4px #000,0 0 2px #000}
 .camera-info .lf{color:var(--green);font-size:18px;font-weight:1000}
+.camera-brand-slot{width:min(190px,58vw);height:64px;display:flex;align-items:flex-end;margin-bottom:5px}
+.camera-brand-logo{display:block;max-width:100%;max-height:64px;object-fit:contain;object-position:left bottom;opacity:.85;mix-blend-mode:screen}
 .camera-compass{position:absolute;right:20px;bottom:calc(132px + var(--safe-bottom));width:76px;height:76px;border:2px solid white;border-radius:50%;filter:drop-shadow(0 1px 2px #000)}
 .camera-compass::before{content:"N";position:absolute;top:3px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900}
 .camera-compass .arrow{position:absolute;left:50%;top:50%;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:31px solid var(--green);transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg)}
@@ -123,6 +133,7 @@ h1{font-size:28px;margin-bottom:6px}
 
 .empty{padding:38px 28px;text-align:center;color:var(--muted)}
 .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;background:#223128;color:#b8c4bb}
+@media(max-width:360px){.quick-grid{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:800px){.modal-card{left:50%;right:auto;transform:translateX(-50%);width:620px}.home-hero,.project-title{max-width:900px;margin:auto}.card{max-width:900px;margin-left:auto;margin-right:auto}.map-wrap{max-width:980px;margin-left:auto;margin-right:auto}.quick-grid{max-width:900px;margin:auto}}
 
 .brand-text{display:flex;align-items:baseline;gap:7px;letter-spacing:.3px}
@@ -137,18 +148,6 @@ h1{font-size:28px;margin-bottom:6px}
   object-position:left center;
   border-radius:0;
 }
-
-
-.form-row label,.switch-row span,.modal-card h3,.modal-head h2{color:var(--green)!important;font-weight:800}
-.form-row input::placeholder,.camera-label::placeholder{color:#89a194}
-.form-row select, .form-row input, .form-row select option{color:#fff;background:#111713}
-.switch-row{color:#dce6de}
-.home-actions{margin-top:10px}
-.quick-note{margin-top:10px;font-size:12px;color:#9fb0a5}
-.camera-label-wrap{position:absolute;left:15px;right:15px;bottom:calc(214px + var(--safe-bottom));pointer-events:auto}
-.camera-label{width:100%;border:1px solid rgba(255,255,255,.35);border-radius:14px;padding:12px 14px;background:rgba(16,21,18,.66);color:#fff;font-weight:800;backdrop-filter:blur(8px)}
-.camera-tagline{color:#d8f5df;margin-bottom:3px;font-size:11px}
-.photo-label-chip{display:inline-block;margin-bottom:6px;padding:4px 8px;border-radius:999px;background:#223128;color:#37e06f;font-weight:900;font-size:11px}
 
 </style>
 </head>
@@ -210,6 +209,10 @@ const state = {
   destination: null,
   mapFeatures: [],
   mapView: null,
+  followGps: false,
+  gpsUpdatedAt: 0,
+  gpsWaiters: [],
+  activeGeoPdf: null,
   settings: Object.assign({
     coordPrimary: 'utm',
     coordSecondaryEnabled: true,
@@ -223,8 +226,9 @@ const state = {
     areaDecimals: 4,
     customAreaName: 'Unidade',
     customAreaSqm: 10000,
-    showSecondaryOnPhoto: false,
+    showSecondaryOnPhoto: true,
     showAltitudeOnPhoto: true,
+    autoSaveToDevice: true,
     accuracyGood: 5,
     accuracyMedium: 10
   }, JSON.parse(localStorage.getItem('lf_settings') || '{}'))
@@ -250,32 +254,57 @@ backBtn.onclick=()=>{
   if(state.currentProjectId){ state.currentProjectId=null; state.tab='map'; renderHome(); }
 };
 settingsBtn.onclick=()=>renderSettings();
-gpsBtn.onclick=async()=>{
-  await requestSensors();
-  toast(state.gps ? `GPS ± ${state.gps.accuracy.toFixed(1)} m` : 'Aguardando GPS…');
-};
+gpsBtn.onclick=locateMe;
 bottomNav.addEventListener('click',e=>{
   const b=e.target.closest('button[data-tab]'); if(!b)return;
   state.tab=b.dataset.tab; renderProject();
 });
 
-async function renderHome(){
+async function locateMe(){
+  gpsBtn.classList.add('locating');
+  await requestSensors();
+  const gps=await waitForGps(16000);
+  gpsBtn.classList.remove('locating');
+  if(!gps){toast('Não foi possível obter sua localização. Verifique a permissão do GPS.');return}
+  if(!state.currentProjectId){toast(`GPS ± ${gps.accuracy.toFixed(1)} m`);return}
+  if(state.activeGeoPdf&&$('#geoPdfView')&&focusGeoPdfOnGps(gps))return;
+  state.followGps=true;
+  setMapViewAroundGps(gps);
+  state.tab='map';
+  renderProject();
+  toast(`Mapa centralizado na sua posição • ± ${gps.accuracy.toFixed(1)} m`);
+}
+
+function waitForGps(timeout=16000){
+  if(state.gps&&Date.now()-state.gpsUpdatedAt<30000)return Promise.resolve(state.gps);
+  return new Promise(resolve=>{
+    const waiter={resolve,timer:null};
+    waiter.timer=setTimeout(()=>{
+      state.gpsWaiters=state.gpsWaiters.filter(w=>w!==waiter);
+      resolve(state.gps);
+    },timeout);
+    state.gpsWaiters.push(waiter);
+  });
+}
+
+function setMapViewAroundGps(gps,radiusMeters=220){
+  const lat=gps.latitude,lon=gps.longitude;
+  const dLat=radiusMeters/111320;
+  const dLon=radiusMeters/(111320*Math.max(.2,Math.cos(lat*Math.PI/180)));
+  state.mapView={minLat:lat-dLat,maxLat:lat+dLat,minLon:lon-dLon,maxLon:lon+dLon};
+}
+
+function renderHome(){
   backBtn.classList.add('hidden'); bottomNav.classList.add('hidden');
-  const quickItems = await idbListByPrefix('photos','photo:quick:');
   main.innerHTML = `
     <section class="home-hero">
       <div class="kicker">CAMPO OFFLINE</div>
       <h1>Seus projetos</h1>
       <p class="muted">GeoPDF, GPS, fotos, KML e medições em um só lugar.</p>
-      <div class="action-row home-actions">
-        <button id="newProject" class="primary">+ Novo projeto</button>
-        <button id="quickPhoto" class="secondary">📷 Foto rápida</button>
-      </div>
-      <div class="quick-note">${quickItems.length ? `${quickItems.length} foto(s) rápida(s) salva(s) no aparelho.` : 'Você também pode tirar foto sem criar projeto.'}</div>
+      <button id="newProject" class="primary">+ Novo projeto</button>
     </section>
     <section id="projectList"></section>`;
   $('#newProject').onclick=createProjectModal;
-  $('#quickPhoto').onclick=()=>startCamera({projectId:'quick',projectName:'Foto rápida'});
   const list=$('#projectList');
   if(!state.projects.length){list.innerHTML='<div class="empty">Crie o primeiro projeto para começar.</div>';return}
   list.innerHTML=state.projects.map(p=>`
@@ -286,6 +315,7 @@ async function renderHome(){
     </div>`).join('');
   list.querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>{
     state.currentProjectId=el.dataset.id; state.tab='map'; state.drawPoints=[]; state.destination=null; state.mapFeatures=[];
+    state.mapView=null;state.followGps=false;
     renderProject(); requestSensors();
   });
 }
@@ -318,6 +348,7 @@ function projectHeader(){
 function renderMapTab(){
   main.innerHTML = projectHeader()+`
   <div class="quick-grid">
+    <button class="quick-btn" id="quickPhoto"><b>📷</b>Foto rápida</button>
     <button class="quick-btn" id="openPdf"><b>📄</b>GeoPDF</button>
     <button class="quick-btn" id="importKml"><b>🧩</b>KML/KMZ</button>
     <button class="quick-btn" id="drawArea"><b>✏️</b>Área</button>
@@ -325,7 +356,7 @@ function renderMapTab(){
   </div>
   <div class="map-wrap">
     <canvas id="fieldCanvas"></canvas>
-    <div id="mapMessage" class="map-message">Mapa de campo: importe KML/KMZ ou use o GPS. O GeoPDF abre em visualização própria neste beta.</div>
+    <div id="mapMessage" class="map-message">${state.followGps?'📍 Acompanhando sua posição atual.':'Mapa de campo: importe KML/KMZ ou toque na mira para ir à sua localização.'}</div>
     <div id="navCompass" class="nav-compass hidden">
       <div class="compass-dial"><div id="navArrow" class="compass-arrow"></div></div>
       <div id="navDistance" class="nav-distance">—</div>
@@ -338,6 +369,7 @@ function renderMapTab(){
       <div id="areaPill" class="area-pill"></div>
     </div>
   </div>`;
+  $('#quickPhoto').onclick=startCamera;
   $('#openPdf').onclick=openGeoPdf;
   $('#importKml').onclick=importKml;
   $('#drawArea').onclick=()=>{state.mode=state.mode==='draw'?'browse':'draw'; if(state.mode==='draw') state.drawPoints=[]; renderMapTab();};
@@ -352,14 +384,21 @@ async function openGeoPdf(){
   const p=currentProject();
   const rec=await idbGet('files',`pdf:${p.id}`);
   if(!rec){ return importPdf(); }
+  const geoRef=rec.geoRef||await parseGeoPdfReference(rec.blob);
+  if(geoRef&&!rec.geoRef){rec.geoRef=geoRef;await idbPut('files',rec)}
   const url=URL.createObjectURL(rec.blob);
+  state.activeGeoPdf={url,geoRef,following:false};
+  const ratio=geoRef?.mediaBox?(geoRef.mediaBox[2]-geoRef.mediaBox[0])/(geoRef.mediaBox[3]-geoRef.mediaBox[1]):null;
   main.innerHTML=projectHeader()+`
-    <div class="info-banner">📍 O GPS continua ativo sobre a visualização. Neste beta web, a posição ainda não é colocada exatamente sobre a folha georreferenciada.</div>
-    <div class="pdf-view"><iframe src="${url}"></iframe></div>
+    <div class="info-banner">${geoRef?'📍 Toque na mira para mostrar e acompanhar sua posição sobre a folha georreferenciada.':'⚠️ O georreferenciamento deste PDF não foi identificado. Nesse caso, a mira abre o mapa de campo na sua posição.'}</div>
+    <div id="geoPdfView" class="pdf-view ${geoRef?'georef':''}" ${ratio?`style="aspect-ratio:${ratio}"`:''}><iframe id="geoPdfFrame" src="${url}#page=1&zoom=page-fit&toolbar=0&navpanes=0"></iframe><div id="pdfGpsMarker" class="pdf-gps-marker" aria-label="Sua localização"></div></div>
     <div class="card">
       <div id="pdfGps">${state.gps?coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordPrimary):'Aguardando GPS…'}</div>
+      <div id="pdfGpsSecondary" class="muted small">${state.gps&&state.settings.coordSecondaryEnabled?coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordSecondary):''}</div>
       <div class="muted small">${state.gps?`Precisão ± ${state.gps.accuracy.toFixed(1)} m`:''}</div>
+      <div class="action-row" style="margin-top:10px"><button id="pdfLocate" class="primary">⌖ Minha localização</button></div>
     </div>`;
+  $('#pdfLocate').onclick=locateMe;
 }
 
 async function importPdf(){
@@ -367,10 +406,64 @@ async function importPdf(){
   input.onchange=async()=>{
     const file=input.files[0]; if(!file)return;
     const p=currentProject();
-    await idbPut('files',{key:`pdf:${p.id}`,blob:file,name:file.name,type:file.type});
-    p.geoPdfName=file.name; saveState(); toast('GeoPDF salvo no aparelho'); renderProject();
+    const geoRef=await parseGeoPdfReference(file);
+    await idbPut('files',{key:`pdf:${p.id}`,blob:file,name:file.name,type:file.type,geoRef});
+    p.geoPdfName=file.name; saveState(); toast(geoRef?'GeoPDF georreferenciado salvo no aparelho':'PDF salvo; georreferenciamento não identificado'); renderProject();
   };
   input.click();
+}
+
+async function parseGeoPdfReference(blob){
+  try{
+    const text=new TextDecoder('latin1').decode(await blob.arrayBuffer()),gIndex=text.indexOf('/GPTS');
+    if(gIndex<0)return null;
+    const near=text.slice(Math.max(0,gIndex-9000),Math.min(text.length,gIndex+18000));
+    const gpts=parsePdfNumberArray(near,'GPTS'),lpts=parsePdfNumberArray(near,'LPTS');
+    if(!gpts||!lpts||gpts.length<6||lpts.length<6)return null;
+    const bbox=parsePdfNumberArray(near,'BBox')||[0,0,1,1];
+    const mediaBox=parsePdfNumberArray(text,'MediaBox')||bbox;
+    if(bbox.length<4||mediaBox.length<4)return null;
+    const n=Math.min(Math.floor(gpts.length/2),Math.floor(lpts.length/2)),points=[];
+    for(let i=0;i<n;i++)points.push({lat:gpts[i*2],lon:gpts[i*2+1],x:lpts[i*2],y:lpts[i*2+1]});
+    if(points.some(p=>Math.abs(p.lat)>90||Math.abs(p.lon)>180))return null;
+    const affineX=fitGeoPdfAffine(points,'x'),affineY=fitGeoPdfAffine(points,'y');
+    if(!affineX||!affineY)return null;
+    const swapped=points.map(p=>({lat:p.lon,lon:p.lat,x:p.x,y:p.y}));
+    const altAffineX=swapped.every(p=>Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180)?fitGeoPdfAffine(swapped,'x'):null;
+    const altAffineY=altAffineX?fitGeoPdfAffine(swapped,'y'):null;
+    return {bbox:bbox.slice(0,4),mediaBox:mediaBox.slice(0,4),affineX,affineY,altAffineX,altAffineY};
+  }catch(_){return null}
+}
+function parsePdfNumberArray(text,key){
+  const m=text.match(new RegExp('/'+key+'\\s*\\[([\\s\\S]*?)\\]'));
+  if(!m)return null;const values=m[1].match(/[+-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+-]?\d+)?/g);return values?values.map(Number).filter(Number.isFinite):null;
+}
+function fitGeoPdfAffine(points,target){
+  let ll=0,la=0,l1=0,aa=0,a1=0,n=points.length,lt=0,at=0,t1=0;
+  for(const p of points){const l=p.lon,a=p.lat,t=p[target];ll+=l*l;la+=l*a;l1+=l;aa+=a*a;a1+=a;lt+=l*t;at+=a*t;t1+=t}
+  return solve3([[ll,la,l1],[la,aa,a1],[l1,a1,n]],[lt,at,t1]);
+}
+function solve3(matrix,values){
+  const a=matrix.map((r,i)=>[...r,values[i]]);
+  for(let c=0;c<3;c++){
+    let pivot=c;for(let r=c+1;r<3;r++)if(Math.abs(a[r][c])>Math.abs(a[pivot][c]))pivot=r;
+    if(Math.abs(a[pivot][c])<1e-12)return null;
+    [a[c],a[pivot]]=[a[pivot],a[c]];const d=a[c][c];for(let j=c;j<4;j++)a[c][j]/=d;
+    for(let r=0;r<3;r++)if(r!==c){const f=a[r][c];for(let j=c;j<4;j++)a[r][j]-=f*a[c][j]}
+  }
+  return [a[0][3],a[1][3],a[2][3]];
+}
+function focusGeoPdfOnGps(gps,silent=false){
+  const active=state.activeGeoPdf,ref=active?.geoRef,view=$('#geoPdfView'),marker=$('#pdfGpsMarker');
+  if(!ref||!view||!marker)return false;
+  const b=ref.bbox,m=ref.mediaBox,project=(ax,ay)=>{const apply=(coef)=>coef[0]*gps.longitude+coef[1]*gps.latitude+coef[2],lx=apply(ax),ly=apply(ay),pageX=b[0]+lx*(b[2]-b[0]),pageY=b[1]+ly*(b[3]-b[1]);return {x:(pageX-m[0])/(m[2]-m[0]),y:1-(pageY-m[1])/(m[3]-m[1])}};
+  const candidates=[project(ref.affineX,ref.affineY)];if(ref.altAffineX&&ref.altAffineY)candidates.push(project(ref.altAffineX,ref.altAffineY));
+  const point=candidates.find(p=>p.x>=0&&p.x<=1&&p.y>=0&&p.y<=1)||candidates[0],x=point.x,y=point.y;
+  active.following=true;
+  if(x<0||x>1||y<0||y>1){marker.classList.remove('visible');if(!silent)toast('Sua localização está fora da área desta folha GeoPDF');return true}
+  marker.style.left=`${x*100}%`;marker.style.top=`${y*100}%`;marker.classList.add('visible');
+  if(!silent)toast(`Localização mostrada no GeoPDF • ± ${gps.accuracy.toFixed(1)} m`);
+  return true;
 }
 
 async function importKml(){
@@ -386,7 +479,7 @@ async function importKml(){
     state.mapFeatures.push(...features);
     const p=currentProject(); p.kmlNames=[...(p.kmlNames||[]),file.name]; saveState();
     await idbPut('files',{key:`kml:${p.id}:${uid()}`,blob:file,name:file.name,type:file.type});
-    state.mapView=null; toast(`${features.length} elemento(s) importado(s)`); renderMapTab();
+    state.mapView=null;state.followGps=false;toast(`${features.length} elemento(s) importado(s)`); renderMapTab();
   };
   input.click();
 }
@@ -449,6 +542,7 @@ function fitCanvas(c){
   c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr);
 }
 function mapBounds(){
+  if(state.mapView)return state.mapView;
   const pts=[];
   state.mapFeatures.forEach(f=>pts.push(...f.points));
   pts.push(...state.drawPoints);
@@ -525,15 +619,16 @@ function updateNavigation(){
 
 async function renderPhotosTab(){
   main.innerHTML=projectHeader()+`<div class="action-row" style="padding:0 12px 6px"><button id="newPhoto" class="primary">📷 Tirar foto</button></div><div id="photosGrid" class="photo-grid"></div>`;
-  $('#newPhoto').onclick=()=>startCamera();
+  $('#newPhoto').onclick=startCamera;
   const p=currentProject(),items=await idbListByPrefix('photos',`photo:${p.id}:`);
   const grid=$('#photosGrid');
   if(!items.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhuma foto ainda.</div>';return}
   grid.innerHTML=items.sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).map(item=>{
     const url=URL.createObjectURL(item.blob);
-    const label=item.meta?.label?`<span class="photo-label-chip">${esc(item.meta.label)}</span><br>`:'';
-    return `<div class="photo-card"><img src="${url}"><div class="meta">${label}${new Date(item.createdAt).toLocaleString('pt-BR')}<br>GPS ± ${item.meta.accuracy.toFixed(1)} m • ${item.meta.heading.toFixed(0)}°</div><div style="padding:0 8px 8px"><button class="secondary sharePhoto" data-key="${item.key}">Compartilhar</button></div></div>`;
+    const accuracy=Number(item.meta?.accuracy||0),heading=Number(item.meta?.heading||0);
+    return `<div class="photo-card"><img src="${url}" alt="Foto de campo"><div class="meta">${new Date(item.createdAt).toLocaleString('pt-BR')}<br>GPS ± ${accuracy.toFixed(1)} m • ${heading.toFixed(0)}°</div><div class="photo-actions"><button class="primary savePhoto" data-key="${item.key}">Salvar no celular</button><button class="secondary sharePhoto" data-key="${item.key}">Compartilhar</button></div></div>`;
   }).join('');
+  grid.querySelectorAll('.savePhoto').forEach(b=>b.onclick=()=>savePhotoToDevice(b.dataset.key));
   grid.querySelectorAll('.sharePhoto').forEach(b=>b.onclick=()=>sharePhoto(b.dataset.key));
 }
 
@@ -551,21 +646,19 @@ async function renderFilesTab(){
   $('#impPdf2').onclick=importPdf; $('#impKml2').onclick=importKml;
 }
 
-async function startCamera(options={}){
+async function startCamera(){
   await requestSensors();
-  const activeProject = currentProject();
-  const projectId = options.projectId || activeProject?.id || 'quick';
-  const projectName = options.projectName || activeProject?.name || 'Foto rápida';
+  const photoLogo=await preparePhotoLogo();
   const layer=document.createElement('div');layer.className='camera-layer';layer.innerHTML=`
     <video class="camera-video" autoplay playsinline muted></video>
     <div class="camera-controls">
       <button class="icon-btn camera-close">×</button>
-      <div class="camera-label-wrap"><div class="camera-tagline">Identificação da foto</div><input id="photoLabel" class="camera-label" placeholder="Ex.: Marco M-01, Cerca norte, Divisa, APP"></div>
-      <div class="camera-info"><div class="lf">LIMA FIELD</div><div id="camProject">${esc(projectName)}</div><div id="camCoord">Aguardando GPS…</div><div id="camAcc"></div><div id="camHead"></div></div>
+      <div class="camera-info"><div class="camera-brand-slot"></div><div id="camProject">${esc(currentProject().name)}</div><div id="camCoord">Aguardando GPS…</div><div id="camCoordSecondary"></div><div id="camAcc"></div><div id="camHead"></div></div>
       <div class="camera-compass"><div class="arrow"></div></div>
       <button class="camera-shot" aria-label="Fotografar"></button>
     </div>`;
   document.body.appendChild(layer);
+  if(photoLogo){const img=new Image();img.className='camera-brand-logo';img.src=photoLogo.toDataURL('image/png');img.alt='Lima Field';layer.querySelector('.camera-brand-slot').appendChild(img)}
   const video=layer.querySelector('video');
   let stream=null;
   try{
@@ -573,84 +666,116 @@ async function startCamera(options={}){
     video.srcObject=stream;
   }catch(err){
     layer.remove();
-    return fallbackPhotoInput({projectId,projectName});
+    return fallbackPhotoInput();
   }
   const close=()=>{stream?.getTracks().forEach(t=>t.stop());layer.remove()};
   layer.querySelector('.camera-close').onclick=close;
   const refresh=()=>{
     if(!layer.isConnected)return;
-    if(state.gps){layer.querySelector('#camCoord').textContent=coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordPrimary);layer.querySelector('#camAcc').textContent=`GPS ± ${state.gps.accuracy.toFixed(1)} m`;}
+    if(state.gps){
+      layer.querySelector('#camCoord').textContent=coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordPrimary);
+      layer.querySelector('#camCoordSecondary').textContent=shouldShowSecondaryPhoto()?coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordSecondary):'';
+      layer.querySelector('#camAcc').textContent=`GPS ± ${state.gps.accuracy.toFixed(1)} m`;
+    }
     layer.querySelector('#camHead').textContent=`Direção ${state.heading.toFixed(0)}° ${cardinal(state.heading)}`;
     layer.querySelector('.camera-compass .arrow').style.transform=`translate(-50%,-100%) rotate(${state.heading}deg)`;
     requestAnimationFrame(refresh);
   };refresh();
   layer.querySelector('.camera-shot').onclick=async()=>{
     if(!state.gps){toast('Aguardando GPS');return}
-    const label=normalizePhotoLabel(layer.querySelector('#photoLabel').value);
     const canvas=document.createElement('canvas');
     canvas.width=video.videoWidth||1920;canvas.height=video.videoHeight||1080;
     const ctx=canvas.getContext('2d');ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    drawPhotoStamp(ctx,canvas.width,canvas.height,projectName,state.gps,state.heading,label);
+    await drawPhotoStamp(ctx,canvas.width,canvas.height,currentProject().name,state.gps,state.heading);
     const jpeg=await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.95));
     const exifJpeg=await insertGpsExif(jpeg,state.gps,state.heading);
-    const key=`photo:${projectId}:${uid()}`;
-    await idbPut('photos',{key,blob:exifJpeg,createdAt:new Date().toISOString(),meta:{lat:state.gps.latitude,lon:state.gps.longitude,altitude:state.gps.altitude||0,accuracy:state.gps.accuracy,heading:state.heading,label,projectName,projectId}});
-    if(projectId!=='quick' && activeProject){activeProject.photos=(activeProject.photos||0)+1; saveState();}
-    else{saveState();}
-    close();toast(label ? `Foto salva: ${label}` : 'Foto salva com GPS no JPEG');
-    projectId==='quick' ? renderHome() : renderPhotosTab();
+    await storeCapturedPhoto(exifJpeg,state.gps,state.heading);
+    close();state.tab='photos';await renderPhotosTab();
+    if(state.settings.autoSaveToDevice)triggerPhotoDownload(exifJpeg,new Date().toISOString());
+    toast(deviceSaveMessage());
   };
 }
-async function fallbackPhotoInput(options={}){
-  const activeProject = currentProject();
-  const projectId = options.projectId || activeProject?.id || 'quick';
-  const projectName = options.projectName || activeProject?.name || 'Foto rápida';
-  const typed = prompt('Nome da foto (opcional):', '') || '';
+async function fallbackPhotoInput(){
   const input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
-  input.onchange=async()=>{
-    const f=input.files[0];if(!f||!state.gps)return;
-    const label=normalizePhotoLabel(typed);
-    const bmp=await createImageBitmap(f);const c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;const ctx=c.getContext('2d');ctx.drawImage(bmp,0,0);
-    drawPhotoStamp(ctx,c.width,c.height,projectName,state.gps,state.heading,label);
-    const jpeg=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));
-    const exif=await insertGpsExif(jpeg,state.gps,state.heading);
-    const key=`photo:${projectId}:${uid()}`;
-    await idbPut('photos',{key,blob:exif,createdAt:new Date().toISOString(),meta:{lat:state.gps.latitude,lon:state.gps.longitude,altitude:state.gps.altitude||0,accuracy:state.gps.accuracy,heading:state.heading,label,projectName,projectId}});
-    if(projectId!=='quick' && activeProject){activeProject.photos=(activeProject.photos||0)+1; saveState();} else {saveState();}
-    toast(label ? `Foto salva: ${label}` : 'Foto salva com GPS no JPEG');
-    projectId==='quick' ? renderHome() : renderPhotosTab();
-  };
+  input.onchange=async()=>{const f=input.files[0];if(!f||!state.gps)return;const bmp=await createImageBitmap(f);const c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;const ctx=c.getContext('2d');ctx.drawImage(bmp,0,0);await drawPhotoStamp(ctx,c.width,c.height,currentProject().name,state.gps,state.heading);const jpeg=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));const exif=await insertGpsExif(jpeg,state.gps,state.heading);await storeCapturedPhoto(exif,state.gps,state.heading);state.tab='photos';await renderPhotosTab();if(state.settings.autoSaveToDevice)triggerPhotoDownload(exif,new Date().toISOString());toast(deviceSaveMessage());};
   input.click();
 }
-function normalizePhotoLabel(value=''){
-  return value.trim().replace(/\s+/g,' ').slice(0,60);
+
+let photoLogoPromise=null;
+function shouldShowSecondaryPhoto(){
+  return !!state.settings.coordSecondaryEnabled&&state.settings.coordSecondary!==state.settings.coordPrimary;
+}
+async function preparePhotoLogo(){
+  if(photoLogoPromise)return photoLogoPromise;
+  photoLogoPromise=(async()=>{
+    const img=$('.official-logo');if(!img)return null;
+    if(!img.complete||!img.naturalWidth)await img.decode().catch(()=>new Promise(r=>{img.onload=r;img.onerror=r}));
+    if(!img.naturalWidth)return null;
+    const scan=document.createElement('canvas'),max=900,ratio=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+    scan.width=Math.max(1,Math.round(img.naturalWidth*ratio));scan.height=Math.max(1,Math.round(img.naturalHeight*ratio));
+    const sctx=scan.getContext('2d',{willReadFrequently:true});sctx.drawImage(img,0,0,scan.width,scan.height);
+    const data=sctx.getImageData(0,0,scan.width,scan.height).data;
+    let minX=scan.width,minY=scan.height,maxX=0,maxY=0;
+    for(let y=0;y<scan.height;y+=2)for(let x=0;x<scan.width;x+=2){const i=(y*scan.width+x)*4,r=data[i],g=data[i+1],b=data[i+2],bright=Math.max(r,g,b);if(bright>32){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y}}
+    if(minX>maxX||minY>maxY)return scan;
+    const pad=8,minXp=Math.max(0,minX-pad),minYp=Math.max(0,minY-pad),maxXp=Math.min(scan.width,maxX+pad),maxYp=Math.min(scan.height,maxY+pad);
+    const out=document.createElement('canvas');out.width=maxXp-minXp;out.height=maxYp-minYp;out.getContext('2d').drawImage(scan,minXp,minYp,out.width,out.height,0,0,out.width,out.height);return out;
+  })();
+  return photoLogoPromise;
 }
 
-function drawPhotoStamp(ctx,w,h,project,gps,heading,label=''){
-  const scale=Math.max(1,w/1200),m=24*scale;
-  ctx.save();ctx.font=`900 ${18*scale}px -apple-system`;ctx.textBaseline='top';ctx.lineJoin='round';ctx.lineWidth=4*scale;ctx.strokeStyle='rgba(0,0,0,.9)';
+async function drawPhotoStamp(ctx,w,h,project,gps,heading){
+  const scale=Math.max(1,w/1200),m=24*scale,logo=await preparePhotoLogo();
   const lines=[
-    ...(label?[[label.toUpperCase(),'#37e06f',24*scale]]:[]),
-    ['LIMA FIELD','#37e06f',19*scale],
-    ...(project && project!=='Foto rápida'?[[project,'#fff',17*scale]]:[]),
+    [project,'#fff',18*scale],
     [new Date().toLocaleString('pt-BR'),'#fff',17*scale],
     [coordFormat(gps.latitude,gps.longitude,state.settings.coordPrimary),'#fff',17*scale],
-    ...(state.settings.showSecondaryOnPhoto?[[coordFormat(gps.latitude,gps.longitude,state.settings.coordSecondary),'#d9e4dc',15*scale]]:[]),
+    ...(shouldShowSecondaryPhoto()?[[coordFormat(gps.latitude,gps.longitude,state.settings.coordSecondary),'#d9ffe4',16*scale]]:[]),
     [`GPS ± ${gps.accuracy.toFixed(1)} m`,'#fff',17*scale],
     ...(state.settings.showAltitudeOnPhoto?[[`Alt. ${(gps.altitude||0).toFixed(1)} m`,'#fff',17*scale]]:[]),
     [`Direção ${heading.toFixed(0)}° ${cardinal(heading)}`,'#fff',17*scale]
   ];
-  let y=h-m-lines.reduce((s,l)=>s+l[2]*1.45,0);
+  const textHeight=lines.reduce((s,l)=>s+l[2]*1.45,0),logoW=logo?Math.min(w*.34,280*scale):0,logoH=logo?logoW*logo.height/logo.width:0;
+  let y=Math.max(m,h-m-textHeight-logoH-(logo?10*scale:0));
+  if(logo){ctx.save();ctx.globalAlpha=.85;ctx.globalCompositeOperation='screen';ctx.drawImage(logo,m,y,logoW,logoH);ctx.restore();y+=logoH+10*scale}
+  ctx.save();ctx.textBaseline='top';ctx.lineJoin='round';ctx.lineWidth=4*scale;ctx.strokeStyle='rgba(0,0,0,.9)';
   for(const [text,color,size] of lines){ctx.font=`900 ${size}px -apple-system`;ctx.strokeText(text,m,y);ctx.fillStyle=color;ctx.fillText(text,m,y);y+=size*1.45}
   const cx=w-92*scale,cy=h-92*scale,r=58*scale;ctx.lineWidth=3*scale;ctx.strokeStyle='#fff';ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#fff';ctx.font=`900 ${14*scale}px -apple-system`;ctx.textAlign='center';ctx.fillText('N',cx,cy-r+4*scale);
   ctx.translate(cx,cy);ctx.rotate(heading*Math.PI/180);ctx.fillStyle='#37e06f';ctx.beginPath();ctx.moveTo(0,-r+12*scale);ctx.lineTo(-10*scale,10*scale);ctx.lineTo(10*scale,10*scale);ctx.closePath();ctx.fill();ctx.restore();
 }
+async function storeCapturedPhoto(blob,gps,heading){
+  const p=currentProject();if(!p)throw new Error('Projeto não encontrado');
+  const createdAt=new Date().toISOString(),key=`photo:${p.id}:${uid()}`;
+  await idbPut('photos',{key,blob,createdAt,meta:{lat:gps.latitude,lon:gps.longitude,altitude:gps.altitude||0,accuracy:gps.accuracy,heading,primary:state.settings.coordPrimary,secondary:shouldShowSecondaryPhoto()?state.settings.coordSecondary:null}});
+  p.photos=(p.photos||0)+1;saveState();
+  try{await navigator.storage?.persist?.()}catch(_){}
+  return {key,createdAt};
+}
+function photoFileName(createdAt){return `Lima_Field_${createdAt.replace(/[:.]/g,'-')}.jpg`}
+function triggerPhotoDownload(blob,createdAt){
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=photoFileName(createdAt);a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+function deviceSaveMessage(){
+  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  if(!state.settings.autoSaveToDevice)return 'Foto salva na aba Fotos';
+  return ios?'Foto salva na aba Fotos. O iPhone pode pedir confirmação para guardar na galeria.':'Foto salva no projeto e enviada ao celular';
+}
+async function savePhotoToDevice(key){
+  const item=await idbGet('photos',key);if(!item)return;
+  const file=new File([item.blob],photoFileName(item.createdAt),{type:'image/jpeg'});
+  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  if(ios&&navigator.canShare?.({files:[file]})){
+    toast('No menu do iPhone, toque em “Salvar Imagem”');
+    try{await navigator.share({files:[file],title:'Salvar foto do Lima Field'})}catch(_){}
+  }else{
+    triggerPhotoDownload(item.blob,item.createdAt);toast('Foto enviada para o celular');
+  }
+}
 async function sharePhoto(key){
   const item=await idbGet('photos',key);if(!item)return;
-  const baseLabel=(item.meta?.label||'Lima_Field').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'')||'Lima_Field';
-  const file=new File([item.blob],`${baseLabel}_${item.createdAt.replace(/[:.]/g,'-')}.jpg`,{type:'image/jpeg'});
+  const file=new File([item.blob],photoFileName(item.createdAt),{type:'image/jpeg'});
   if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:'Lima Field'});}
-  else{const a=document.createElement('a');a.href=URL.createObjectURL(item.blob);a.download=file.name;a.click();}
+  else triggerPhotoDownload(item.blob,item.createdAt);
 }
 
 /* Minimal EXIF APP1 GPS writer for the JPEG created by canvas. */
@@ -757,11 +882,18 @@ function cardinal(h){return ['N','NE','E','SE','S','SW','W','NW'][Math.round(((h
 
 /* Sensors */
 async function requestSensors(){
-  if(navigator.geolocation){
-    navigator.geolocation.watchPosition(pos=>{
+  if(navigator.geolocation&&requestSensors._watch==null){
+    requestSensors._watch=navigator.geolocation.watchPosition(pos=>{
       state.gps={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,altitude:pos.coords.altitude||0};
-      updateCoordPanel();updateNavigation();drawMap();
-    },err=>toast('GPS: '+err.message),{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+      state.gpsUpdatedAt=Date.now();
+      if(state.followGps)setMapViewAroundGps(state.gps);
+      const waiters=state.gpsWaiters.splice(0);waiters.forEach(w=>{clearTimeout(w.timer);w.resolve(state.gps)});
+      updateCoordPanel();updateNavigation();drawMap();updatePdfGps();
+    },err=>{
+      gpsBtn.classList.remove('locating');
+      const waiters=state.gpsWaiters.splice(0);waiters.forEach(w=>{clearTimeout(w.timer);w.resolve(null)});
+      toast('GPS: '+err.message);
+    },{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
   }
   try{
     if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
@@ -774,6 +906,12 @@ async function requestSensors(){
       },true);requestSensors._ori=true;
     }
   }catch(_){}
+}
+function updatePdfGps(){
+  if(!state.gps||!$('#pdfGps'))return;
+  $('#pdfGps').textContent=coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordPrimary);
+  if($('#pdfGpsSecondary'))$('#pdfGpsSecondary').textContent=state.settings.coordSecondaryEnabled?coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordSecondary):'';
+  if(state.activeGeoPdf?.following)focusGeoPdfOnGps(state.gps,true);
 }
 
 /* Settings */
@@ -793,12 +931,13 @@ function renderSettings(){
     <div class="form-row"><label>Casas decimais</label><select id="areaDecimals">${[2,3,4,5,6].map(n=>`<option ${n==state.settings.areaDecimals?'selected':''}>${n}</option>`).join('')}</select></div>
     <h3>Foto</h3>
     ${switchRow('Mostrar altitude','showAltitudeOnPhoto')}
-    ${switchRow('Mostrar coordenada secundária na foto','showSecondaryOnPhoto')}
-    <div class="note">A foto do beta web é gerada em JPEG com GPS EXIF e direção, além das informações visíveis sem fundo escuro.</div>
+    ${switchRow('Salvar cópia no celular','autoSaveToDevice')}
+    <div class="note">A opção “Mostrar coordenada secundária” também controla o carimbo da foto. O JPEG inclui GPS EXIF, direção e o logo sem fundo preto.</div>
     <br><button id="saveSettings" class="primary">Salvar</button>`);
   $('#saveSettings').onclick=()=>{
     ['coordPrimary','coordSecondary','datum','areaPrimary','areaSecondary'].forEach(k=>state.settings[k]=$('#'+k).value);
-    ['coordSecondaryEnabled','utmAuto','areaSecondaryEnabled','showAltitudeOnPhoto','showSecondaryOnPhoto'].forEach(k=>state.settings[k]=$('#'+k).checked);
+    ['coordSecondaryEnabled','utmAuto','areaSecondaryEnabled','showAltitudeOnPhoto','autoSaveToDevice'].forEach(k=>state.settings[k]=$('#'+k).checked);
+    state.settings.showSecondaryOnPhoto=state.settings.coordSecondaryEnabled;
     state.settings.utmZone=+$('#utmZone').value||21;state.settings.areaDecimals=+$('#areaDecimals').value||4;saveState();modal.close();renderProjectOrHome();toast('Configurações salvas');
   };
 }
