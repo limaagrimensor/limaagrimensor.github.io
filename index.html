@@ -150,12 +150,22 @@ h1{font-size:28px;margin-bottom:6px}
 .camera-video{width:100%;height:100%;object-fit:cover;touch-action:none;transform-origin:center center;will-change:transform}
 .camera-controls{position:absolute;inset:0;pointer-events:none}
 .camera-close{position:absolute;top:calc(12px + var(--safe-top));left:12px;pointer-events:auto}
+.camera-flip{position:absolute;top:calc(12px + var(--safe-top));right:12px;pointer-events:auto;font-size:25px;line-height:1}
 .camera-zoom{position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;max-width:calc(100vw - 118px);padding:6px 8px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(7,11,8,.78);backdrop-filter:blur(8px);pointer-events:auto}
 .camera-zoom button{width:34px;height:34px;flex:0 0 34px;border:1px solid rgba(255,255,255,.35);border-radius:50%;background:#172019;color:white;font-size:23px;font-weight:900;line-height:1}
 .camera-zoom input{width:min(170px,34vw);accent-color:var(--green)}
 .camera-zoom-value{min-width:39px;color:var(--green);font-size:12px;font-weight:1000;text-align:center}
 .camera-shot{position:absolute;left:50%;bottom:calc(28px + var(--safe-bottom));transform:translateX(-50%);width:82px;height:82px;border-radius:50%;border:5px solid white;background:transparent;pointer-events:auto}
 .camera-shot::after{content:"";position:absolute;inset:7px;background:var(--green);border-radius:50%}
+.camera-shot.video::after{background:#ff4057}
+.camera-shot.recording::after{inset:20px;border-radius:8px;background:#ff4057}
+.camera-shot:disabled{opacity:.58}
+.camera-mode{position:absolute;left:50%;bottom:calc(121px + var(--safe-bottom));transform:translateX(-50%);display:flex;gap:4px;padding:4px;border:1px solid rgba(255,255,255,.34);border-radius:999px;background:rgba(7,11,8,.78);backdrop-filter:blur(8px);pointer-events:auto}
+.camera-mode button{padding:8px 13px;border:0;border-radius:999px;background:transparent;color:#d7ded9;font-size:12px;font-weight:900}
+.camera-mode button.active{background:var(--green);color:#07110a}
+.camera-record-time{position:absolute;left:50%;bottom:calc(174px + var(--safe-bottom));transform:translateX(-50%);padding:6px 10px;border-radius:999px;background:rgba(7,11,8,.78);color:white;font-size:13px;font-weight:1000;font-variant-numeric:tabular-nums;pointer-events:none}
+.camera-record-time::before{content:"";display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#ff4057;vertical-align:1px}
+.video-review{display:block;width:100%;max-height:62vh;background:#000;border-radius:14px}
 .camera-info{position:absolute;top:calc(78px + var(--safe-top));right:15px;left:31%;color:white;font-weight:850;font-size:15px;line-height:1.3;text-align:right;text-shadow:0 1px 4px #000,0 0 2px #000}
 .camera-info .lf{color:var(--green);font-size:20px;font-weight:1000}
 .camera-brand-slot{width:min(205px,62vw);height:70px;display:flex;align-items:flex-end;justify-content:flex-end;margin:0 0 6px auto}
@@ -216,9 +226,9 @@ h1{font-size:28px;margin-bottom:6px}
   <div id="toast" class="toast"></div>
 
   <script>
-/* Lima Field PWA v0.4.8 */
+/* Lima Field PWA v0.4.9 */
 
-const BUILD_VERSION = '0.4.8';
+const BUILD_VERSION = '0.4.9';
 const PDFJS_PAYLOAD_URL='https://raw.githubusercontent.com/limaagrimensor/limaagrimensor.github.io/a31b65197efb29e8869ba844cc402641234120aa/index.html';
 let PDFJS_MODULE_B64='',PDFJS_WORKER_B64='',pdfJsPayloadPromise=null;
 async function ensurePdfJsPayload(){
@@ -305,11 +315,11 @@ const state = {
 
 const tileCache=new Map();
 const BASE_MAPS={
-  satellite:{label:'Satélite',maxZoom:20,fallbackLevels:5,attribution:'Imagens © Esri, Vantor, Earthstar Geographics e comunidade GIS',url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`},
+  satellite:{label:'Satélite',maxZoom:19,viewMaxZoom:23,fallbackLevels:5,attribution:'Imagens © Esri, Vantor, Earthstar Geographics e comunidade GIS',url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`},
   streets:{label:'Mapa',maxZoom:19,attribution:'© OpenStreetMap contributors',url:(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`},
   sentinel:{label:'Sentinel 2025',maxZoom:14,attribution:'Sentinel-2 Cloudless 2025 © EOX • dados Copernicus Sentinel 2025',attributionHtml:'Sentinel-2 Cloudless 2025 © <a href="https://maps.eox.at/" target="_blank" rel="noopener">EOX</a> • dados Copernicus 2025',url:(z,x,y)=>`https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/g/${z}/${y}/${x}.jpg`}
 };
-function mapMaxViewZoom(source=BASE_MAPS[state.settings.baseMap]||BASE_MAPS.satellite){return Math.min(23,(source.maxZoom||21)+3)}
+function mapMaxViewZoom(source=BASE_MAPS[state.settings.baseMap]||BASE_MAPS.satellite){return Math.min(23,source.viewMaxZoom||(source.maxZoom||21)+3)}
 const GPS_MARKER_PX=Object.freeze({halo:22,core:8.5,ring:13,ringWidth:2.5});
 if(localStorage.getItem('lf_defaults_040')!=='1'){state.settings.areaPrimary='ha';state.settings.areaSecondaryEnabled=true;state.settings.areaSecondary='alq_sp';state.settings.geoPdfOpacity=1;localStorage.setItem('lf_defaults_040','1');saveState()}
 
@@ -421,8 +431,8 @@ function renderHome(){
     <section class="home-hero">
       <div class="kicker">CAMPO OFFLINE • v${BUILD_VERSION}</div>
       <h1>Seus projetos</h1>
-      <p class="muted">Projetos de mapa separados do modo de fotografia.</p>
-      <div class="home-actions"><button id="openPhotoMode" class="primary">📷 Modo Foto</button><button id="newProject" class="secondary">+ Novo projeto</button></div>
+      <p class="muted">Projetos de mapa separados dos registros de foto e vídeo.</p>
+      <div class="home-actions"><button id="openPhotoMode" class="primary">📷 Câmera</button><button id="newProject" class="secondary">+ Novo projeto</button></div>
     </section>
     <section id="projectList"></section>`;
   $('#newProject').onclick=createProjectModal;
@@ -447,12 +457,12 @@ function renderHome(){
 }
 
 function promptPhotoName(){
-  openModal('Nova foto',`
-    <div class="note">A foto será salva no Modo Foto e não ficará vinculada a nenhum projeto.</div>
-    <div class="form-row"><label>Nome da foto</label><input id="photoName" maxlength="80" placeholder="Ex.: Marco norte, Entrada da fazenda, Área 01" autofocus></div>
-    <div class="form-row"><label>Resolução</label><select id="photoResolution"><option value="max" ${state.settings.photoResolution==='max'?'selected':''}>Máxima disponível (padrão)</option><option value="12mp" ${state.settings.photoResolution==='12mp'?'selected':''}>Alta • até 12 MP</option><option value="6mp" ${state.settings.photoResolution==='6mp'?'selected':''}>Média • até 6 MP</option><option value="3mp" ${state.settings.photoResolution==='3mp'?'selected':''}>Leve • até 3 MP</option></select></div>
+  openModal('Novo registro',`
+    <div class="note">A foto ou o vídeo não ficará vinculado a nenhum projeto. Os vídeos são salvos diretamente no celular e não ocupam o armazenamento interno do app.</div>
+    <div class="form-row"><label>Nome da foto ou do vídeo</label><input id="photoName" maxlength="80" placeholder="Ex.: Marco norte, Entrada da fazenda, Área 01" autofocus></div>
+    <div class="form-row"><label>Resolução da foto</label><select id="photoResolution"><option value="max" ${state.settings.photoResolution==='max'?'selected':''}>Máxima disponível (padrão)</option><option value="12mp" ${state.settings.photoResolution==='12mp'?'selected':''}>Alta • até 12 MP</option><option value="6mp" ${state.settings.photoResolution==='6mp'?'selected':''}>Média • até 6 MP</option><option value="3mp" ${state.settings.photoResolution==='3mp'?'selected':''}>Leve • até 3 MP</option></select><div class="small muted" style="margin-top:5px">Vídeo: até 1080p, 30 fps, áudio e limite de 5 minutos.</div></div>
     <div class="action-row"><button id="startNamedPhoto" class="primary">Abrir câmera</button><button id="cancelNamedPhoto" class="secondary">Cancelar</button></div>`);
-  const begin=()=>{const name=$('#photoName').value.trim();if(!name){toast('Digite um nome para a foto');$('#photoName').focus();return}const resolution=$('#photoResolution').value||'max';state.settings.photoResolution=resolution;saveState();state.photoCapture={projectId:null,projectName:null,name,resolution,standalone:true};modal.close();startCamera()};
+  const begin=()=>{const name=$('#photoName').value.trim();if(!name){toast('Digite um nome para o registro');$('#photoName').focus();return}const resolution=$('#photoResolution').value||'max';state.settings.photoResolution=resolution;saveState();state.photoCapture={projectId:null,projectName:null,name,resolution,standalone:true};modal.close();startCamera()};
   $('#startNamedPhoto').onclick=begin;$('#cancelNamedPhoto').onclick=()=>{state.photoCapture=null;modal.close()};$('#photoName').onkeydown=e=>{if(e.key==='Enter')begin()};
 }
 function activePhotoCapture(){
@@ -1066,16 +1076,24 @@ function canvasToLatLon(x,y){
 }
 function getMapTile(source,z,x,y){
   const n=Math.pow(2,z),wrapped=((x%n)+n)%n;if(y<0||y>=n)return null;const key=`${state.settings.baseMap}:${z}:${wrapped}:${y}`;let rec=tileCache.get(key),now=Date.now();
-  if(!rec||rec.status==='error'&&now-(rec.failedAt||0)>15000){const img=new Image();rec={img,status:'loading',used:now,failedAt:0};tileCache.set(key,rec);img.onload=()=>{rec.status='loaded';rec.used=Date.now();if($('#baseMapCanvas'))drawMap()};img.onerror=()=>{rec.status='error';rec.failedAt=Date.now()};img.src=source.url(z,wrapped,y);if(tileCache.size>260){const old=[...tileCache.entries()].filter(([,v])=>v.status!=='loading').sort((a,b)=>a[1].used-b[1].used).slice(0,40);old.forEach(([k])=>tileCache.delete(k))}}
+  if(!rec||rec.status==='error'&&now-(rec.failedAt||0)>15000){const img=new Image();rec={img,status:'loading',used:now,failedAt:0};tileCache.set(key,rec);img.onload=()=>{if(img.naturalWidth&&img.naturalHeight){rec.status='loaded';rec.used=Date.now()}else{rec.status='error';rec.failedAt=Date.now()}if($('#baseMapCanvas'))drawMap()};img.onerror=()=>{rec.status='error';rec.failedAt=Date.now();if($('#baseMapCanvas'))drawMap()};img.src=source.url(z,wrapped,y);if(tileCache.size>260){const old=[...tileCache.entries()].filter(([,v])=>v.status!=='loading').sort((a,b)=>a[1].used-b[1].used).slice(0,40);old.forEach(([k])=>tileCache.delete(k))}}
   rec.used=Date.now();return rec;
 }
+function drawClippedMapTile(ctx,img,srcX,srcY,srcW,srcH,sx,sy,tileSize,pixelated=false){
+  const destSize=tileSize+1,left=Math.max(0,sx),top=Math.max(0,sy),right=Math.min(ctx.canvas.width,sx+destSize),bottom=Math.min(ctx.canvas.height,sy+destSize);
+  if(right<=left||bottom<=top)return false;
+  const sourceX=srcX+(left-sx)/destSize*srcW,sourceY=srcY+(top-sy)/destSize*srcH,sourceW=(right-left)/destSize*srcW,sourceH=(bottom-top)/destSize*srcH,smoothing=ctx.imageSmoothingEnabled;
+  if(pixelated)ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(img,sourceX,sourceY,sourceW,sourceH,left,top,right-left,bottom-top);
+  ctx.imageSmoothingEnabled=smoothing;return true;
+}
 function drawMapTileWithFallback(ctx,source,z,tx,ty,sx,sy,tileSize){
-  const tile=getMapTile(source,z,tx,ty);if(tile?.status==='loaded'){ctx.drawImage(tile.img,sx,sy,tileSize+1,tileSize+1);return true}
+  const tile=getMapTile(source,z,tx,ty);if(tile?.status==='loaded'){const width=tile.img.naturalWidth||256,height=tile.img.naturalHeight||256;return drawClippedMapTile(ctx,tile.img,0,0,width,height,sx,sy,tileSize,tileSize>2048)}
   const levels=Math.max(1,source.fallbackLevels||4);
   for(let delta=1;delta<=levels&&z-delta>=2;delta++){
     const factor=2**delta,parent=getMapTile(source,z-delta,Math.floor(tx/factor),Math.floor(ty/factor));if(parent?.status!=='loaded')continue;
-    const crop=256/factor,cropX=((tx%factor)+factor)%factor*crop,cropY=((ty%factor)+factor)%factor*crop,smoothing=ctx.imageSmoothingEnabled;
-    ctx.imageSmoothingEnabled=false;ctx.drawImage(parent.img,cropX,cropY,crop,crop,sx,sy,tileSize+1,tileSize+1);ctx.imageSmoothingEnabled=smoothing;return true;
+    const parentW=parent.img.naturalWidth||256,parentH=parent.img.naturalHeight||256,cropW=parentW/factor,cropH=parentH/factor,cropX=((tx%factor)+factor)%factor*cropW,cropY=((ty%factor)+factor)%factor*cropH;
+    return drawClippedMapTile(ctx,parent.img,cropX,cropY,cropW,cropH,sx,sy,tileSize,true);
   }
   return false;
 }
@@ -1154,17 +1172,17 @@ async function renderPhotoMode(){
   backBtn.classList.remove('hidden');
   main.innerHTML=`
     <section class="home-hero">
-      <div class="kicker">MODO FOTO • v${BUILD_VERSION}</div>
-      <h1>Fotos de campo</h1>
-      <p class="muted">Fotografe sem criar ou vincular um projeto. Escolha o nome antes de abrir a câmera.</p>
-      <div class="home-actions"><button id="newModePhoto" class="primary">📷 Tirar foto</button></div>
+      <div class="kicker">MODO CÂMERA • v${BUILD_VERSION}</div>
+      <h1>Registros de campo</h1>
+      <p class="muted">Fotografe ou grave vídeo sem criar ou vincular um projeto. Escolha o nome antes de abrir a câmera.</p>
+      <div class="home-actions"><button id="newModePhoto" class="primary">📷 Abrir câmera</button></div>
     </section>
     <div class="card note">Use os botões, o controle deslizante ou dois dedos na imagem para ajustar de 0,5× a 5×. O 0,5× usa a lente ultra-angular quando ela é disponibilizada pelo aparelho.</div>
     <div id="photoModeGrid" class="photo-grid"><div class="empty" style="grid-column:1/-1">Carregando fotos…</div></div>`;
   $('#newModePhoto').onclick=promptPhotoName;
   const grid=$('#photoModeGrid'),items=(await idbListByPrefix('photos','photo:')).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   if(!state.photoMode||$('#photoModeGrid')!==grid)return;
-  if(!items.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhuma foto ainda. Toque em “Tirar foto” para começar.</div>';return}
+  if(!items.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhuma foto ainda. Toque em “Abrir câmera” para começar.</div>';return}
   grid.innerHTML=items.map(photoCardHtml).join('');bindPhotoCards(grid);
 }
 function photoDisplayProject(item){
@@ -1214,43 +1232,51 @@ function startCamera(){
   return startLiveCamera();
 }
 async function startLiveCamera(){
-  const capture=activePhotoCapture();if(!capture){toast('Defina o nome da foto antes de abrir a câmera');return}
+  const capture=activePhotoCapture();if(!capture){toast('Defina o nome do registro antes de abrir a câmera');return}
   const photoLogo=await preparePhotoLogo();
   const layer=document.createElement('div');layer.className='camera-layer';layer.innerHTML=`
     <video class="camera-video" autoplay playsinline muted></video>
     <div class="camera-controls">
-      <button class="icon-btn camera-close">×</button>
+      <button class="icon-btn camera-close" aria-label="Fechar câmera">×</button>
+      <button class="icon-btn camera-flip" aria-label="Alternar câmera frontal e traseira" title="Virar câmera">↻</button>
       <div class="camera-zoom" aria-label="Zoom da câmera"><button class="camera-zoom-out" aria-label="Diminuir zoom">−</button><input class="camera-zoom-range" type="range" min="0.5" max="5" step="0.1" value="1" aria-label="Zoom de meio a cinco vezes"><span class="camera-zoom-value">1,0×</span><button class="camera-zoom-in" aria-label="Aumentar zoom">+</button></div>
       <div class="camera-info"><div class="camera-brand-slot"></div><div id="camPhotoName">${esc(capture.name)}</div><div id="camProject">Modo Foto • sem vínculo com projeto</div><div id="camResolution">Resolução: ${photoResolutionLabel(capture.resolution)}</div><div id="camCoord">Aguardando GPS…</div><div id="camCoordSecondary"></div><div id="camAcc"></div></div>
       <div class="camera-direction"><div class="camera-compass"><div class="arrow"></div></div><div id="camHead"></div></div>
+      <div class="camera-record-time hidden">00:00 / 05:00</div>
+      <div class="camera-mode" aria-label="Modo da câmera"><button class="active" data-camera-mode="photo">Foto</button><button data-camera-mode="video">Vídeo</button></div>
       <button class="camera-shot" aria-label="Fotografar"></button>
     </div>`;
   document.body.appendChild(layer);
   if(photoLogo){const img=new Image();img.className='camera-brand-logo';img.src=photoLogo.toDataURL('image/png');img.alt='Lima Field';layer.querySelector('.camera-brand-slot').appendChild(img)}
-  const video=layer.querySelector('video');
+  const video=layer.querySelector('video'),shot=layer.querySelector('.camera-shot'),flipButton=layer.querySelector('.camera-flip'),recordTime=layer.querySelector('.camera-record-time'),modeButtons=[...layer.querySelectorAll('[data-camera-mode]')];
   const zoomRange=layer.querySelector('.camera-zoom-range'),zoomValue=layer.querySelector('.camera-zoom-value');
-  let cameraZoom=1,captureDigitalZoom=1,pinchStartDistance=0,pinchStartZoom=1,stream=null,mainCameraId='',ultraCameraId='',activeCameraKind='main',zoomTimer=null,zoomTask=Promise.resolve(),halfUnavailableNotified=false;
-  const videoConstraints=deviceId=>({video:{...(deviceId?{deviceId:{exact:deviceId}}:{facingMode:{ideal:'environment'}}),width:{ideal:4096},height:{ideal:2160}},audio:false});
+  const MAX_VIDEO_MS=5*60*1000;
+  let cameraMode='photo',cameraZoom=1,captureDigitalZoom=1,pinchStartDistance=0,pinchStartZoom=1,stream=null,mainCameraId='',frontCameraId='',ultraCameraId='',activeCameraKind='main',rearHalfAvailable=false,zoomTimer=null,zoomTask=Promise.resolve(),halfUnavailableNotified=false;
+  let recording=false,mediaRecorder=null,videoChunks=[],recordingCanvas=null,recordingContext=null,recordedStream=null,microphoneStream=null,recordingRaf=0,recordingFrameBusy=false,recordingStartedAt=0,recordingClockTimer=0,recordingLimitTimer=0;
+  const videoConstraints=(deviceId,facing='environment')=>({video:{...(deviceId?{deviceId:{exact:deviceId}}:{facingMode:{ideal:facing}}),width:{ideal:4096},height:{ideal:2160}},audio:false});
   const currentTrack=()=>stream?.getVideoTracks?.()[0]||null;
+  const cameraHeading=()=>((Number(state.heading)||0)+(activeCameraKind==='front'?180:0)+360)%360;
   const zoomCapability=track=>{try{const z=track?.getCapabilities?.().zoom;return z&&Number.isFinite(z.min)&&Number.isFinite(z.max)?z:null}catch(_){return null}};
-  const applyTrackZoom=async(target)=>{const track=currentTrack(),cap=zoomCapability(track);if(!track||!cap)return null;const actual=Math.max(cap.min,Math.min(cap.max,target));try{await track.applyConstraints({advanced:[{zoom:actual}]});return actual}catch(_){return null}};
-  const replaceCameraStream=async(deviceId,kind)=>{stream?.getTracks().forEach(t=>t.stop());stream=await navigator.mediaDevices.getUserMedia(videoConstraints(deviceId));video.srcObject=stream;activeCameraKind=kind;await video.play?.().catch(()=>{});return currentTrack()};
+  const applyTrackZoom=async target=>{const track=currentTrack(),cap=zoomCapability(track);if(!track||!cap)return null;const actual=Math.max(cap.min,Math.min(cap.max,target));try{await track.applyConstraints({advanced:[{zoom:actual}]});return actual}catch(_){return null}};
+  const paintVideoTransform=()=>{video.style.transform=`scale(${activeCameraKind==='front'?-captureDigitalZoom:captureDigitalZoom},${captureDigitalZoom})`};
+  const replaceCameraStream=async(deviceId,kind,facing=kind==='front'?'user':'environment')=>{stream?.getTracks().forEach(t=>t.stop());stream=null;const next=await navigator.mediaDevices.getUserMedia(videoConstraints(deviceId,facing));stream=next;video.srcObject=stream;activeCameraKind=kind;await video.play?.().catch(()=>{});paintVideoTransform();return currentTrack()};
   const paintZoom=value=>{zoomRange.value=String(value);zoomValue.textContent=`${value.toFixed(1).replace('.',',')}×`};
   const applyCameraZoom=async requested=>{
     requested=Math.max(Number(zoomRange.min)||.5,Math.min(5,Number(requested)||1));
+    if(activeCameraKind==='front'&&requested<1){cameraZoom=1;paintZoom(1);captureDigitalZoom=1;await applyTrackZoom(1);paintVideoTransform();return}
     if(requested<1){
       const cap=zoomCapability(currentTrack());
-      if(activeCameraKind==='main'&&cap&&cap.min<=requested){const hardware=await applyTrackZoom(requested);if(hardware!==null){captureDigitalZoom=1;video.style.transform='scale(1)';return}}
+      if(activeCameraKind==='main'&&cap&&cap.min<=requested){const hardware=await applyTrackZoom(requested);if(hardware!==null){captureDigitalZoom=1;paintVideoTransform();return}}
       if(ultraCameraId){
-        if(activeCameraKind!=='ultra')try{await replaceCameraStream(ultraCameraId,'ultra')}catch(_){ultraCameraId='';if(mainCameraId)await replaceCameraStream(mainCameraId,'main').catch(()=>{})}
-        if(activeCameraKind==='ultra'){captureDigitalZoom=Math.max(1,requested/.5);video.style.transform=`scale(${captureDigitalZoom})`;return}
+        if(activeCameraKind!=='ultra')try{await replaceCameraStream(ultraCameraId,'ultra')}catch(_){ultraCameraId='';rearHalfAvailable=false;if(mainCameraId)await replaceCameraStream(mainCameraId,'main').catch(()=>{})}
+        if(activeCameraKind==='ultra'){captureDigitalZoom=Math.max(1,requested/.5);paintVideoTransform();return}
       }
-      cameraZoom=1;zoomRange.min='1';paintZoom(1);captureDigitalZoom=1;video.style.transform='scale(1)';
+      cameraZoom=1;zoomRange.min='1';paintZoom(1);captureDigitalZoom=1;paintVideoTransform();
       if(!halfUnavailableNotified){halfUnavailableNotified=true;toast('A lente 0,5× não foi disponibilizada pelo navegador neste aparelho.',4500)}
       return;
     }
     if(activeCameraKind==='ultra'&&mainCameraId)await replaceCameraStream(mainCameraId,'main');
-    const hardware=await applyTrackZoom(requested);captureDigitalZoom=requested/Math.max(1,hardware||1);video.style.transform=`scale(${captureDigitalZoom})`;
+    const hardware=await applyTrackZoom(requested);captureDigitalZoom=requested/Math.max(1,hardware||1);paintVideoTransform();
   };
   const queueCameraZoom=(value,immediate=false)=>{cameraZoom=Math.max(Number(zoomRange.min)||.5,Math.min(5,Number(value)||1));paintZoom(cameraZoom);clearTimeout(zoomTimer);const run=()=>{zoomTimer=null;zoomTask=zoomTask.catch(()=>{}).then(()=>applyCameraZoom(cameraZoom))};zoomTimer=setTimeout(run,immediate?0:70)};
   const flushCameraZoom=async()=>{if(zoomTimer){clearTimeout(zoomTimer);zoomTimer=null;zoomTask=zoomTask.catch(()=>{}).then(()=>applyCameraZoom(cameraZoom))}await zoomTask};
@@ -1263,19 +1289,88 @@ async function startLiveCamera(){
   const endZoomPointer=e=>{zoomPointers.delete(e.pointerId);if(zoomPointers.size<2)pinchStartDistance=0};
   video.addEventListener('pointerup',endZoomPointer);video.addEventListener('pointercancel',endZoomPointer);video.addEventListener('lostpointercapture',endZoomPointer);
   try{
-    stream=await navigator.mediaDevices.getUserMedia(videoConstraints());
-    video.srcObject=stream;
+    stream=await navigator.mediaDevices.getUserMedia(videoConstraints());video.srcObject=stream;await video.play?.().catch(()=>{});
     mainCameraId=currentTrack()?.getSettings?.().deviceId||'';
-    const initialCap=zoomCapability(currentTrack());
-    if(!(initialCap&&initialCap.min<=.5))try{const devices=await navigator.mediaDevices.enumerateDevices(),ultra=devices.find(d=>d.kind==='videoinput'&&d.deviceId!==mainCameraId&&/(ultra|0[.,]?5|grande.?angular|ultrawide)/i.test(d.label||''));ultraCameraId=ultra?.deviceId||''}catch(_){}
-    if(!(initialCap&&initialCap.min<=.5)&&!ultraCameraId){zoomRange.min='1';zoomRange.title='Este navegador não disponibilizou uma lente ultra-angular';}
+    const initialCap=zoomCapability(currentTrack());rearHalfAvailable=!!(initialCap&&initialCap.min<=.5);
+    try{
+      const devices=await navigator.mediaDevices.enumerateDevices(),cameras=devices.filter(d=>d.kind==='videoinput');
+      const ultra=cameras.find(d=>d.deviceId!==mainCameraId&&/(ultra|0[.,]?5|grande.?angular|ultrawide)/i.test(d.label||''));ultraCameraId=ultra?.deviceId||'';
+      const front=cameras.find(d=>d.deviceId!==mainCameraId&&/(front|frontal|user|facetime)/i.test(d.label||''));frontCameraId=front?.deviceId||'';
+      rearHalfAvailable=rearHalfAvailable||!!ultraCameraId;
+      if(cameras.length<2)flipButton.classList.add('hidden');
+    }catch(_){}
+    if(!rearHalfAvailable){zoomRange.min='1';zoomRange.title='Este navegador não disponibilizou uma lente ultra-angular'}
   }catch(err){
     layer.remove();
-    openModal('Abrir câmera',`<div class="note">A câmera ao vivo foi bloqueada pelo navegador. Use a câmera do celular; a foto continuará sendo carimbada e salva no Modo Foto.</div><br><button id="openSystemCamera" class="primary">Abrir câmera do celular</button>`);
+    openModal('Abrir câmera',`<div class="note">A câmera ao vivo foi bloqueada pelo navegador. Use a câmera do celular; a foto continuará sendo carimbada e salva no Modo Foto. A gravação de vídeo exige a câmera ao vivo.</div><br><button id="openSystemCamera" class="primary">Abrir câmera do celular</button>`);
     $('#openSystemCamera').onclick=()=>{modal.close();fallbackPhotoInput()};return;
   }
-  const close=(clearCapture=true)=>{clearTimeout(zoomTimer);stream?.getTracks().forEach(t=>t.stop());layer.remove();if(clearCapture)state.photoCapture=null};
-  layer.querySelector('.camera-close').onclick=()=>close(true);
+  const cleanupRecordingStreams=()=>{cancelAnimationFrame(recordingRaf);clearInterval(recordingClockTimer);clearTimeout(recordingLimitTimer);recordedStream?.getTracks().forEach(t=>t.stop());microphoneStream?.getTracks().forEach(t=>t.stop());recordedStream=null;microphoneStream=null;recordingCanvas=null;recordingContext=null};
+  const close=(clearCapture=true)=>{clearTimeout(zoomTimer);cleanupRecordingStreams();stream?.getTracks().forEach(t=>t.stop());stream=null;layer.remove();if(clearCapture)state.photoCapture=null};
+  const setModeControlsDisabled=disabled=>modeButtons.forEach(button=>button.disabled=disabled);
+  const setCameraMode=mode=>{
+    if(recording||!['photo','video'].includes(mode))return;
+    cameraMode=mode;modeButtons.forEach(button=>button.classList.toggle('active',button.dataset.cameraMode===mode));
+    shot.classList.toggle('video',mode==='video');shot.classList.remove('recording');shot.setAttribute('aria-label',mode==='video'?'Iniciar gravação':'Fotografar');
+    recordTime.classList.add('hidden');
+    layer.querySelector('#camProject').textContent=mode==='video'?'Modo Vídeo • sem vínculo com projeto':'Modo Foto • sem vínculo com projeto';
+    layer.querySelector('#camResolution').textContent=mode==='video'?'Vídeo: até 1080p • 30 fps • até 5 min':`Resolução: ${photoResolutionLabel(capture.resolution)}`;
+  };
+  modeButtons.forEach(button=>button.onclick=()=>setCameraMode(button.dataset.cameraMode));
+  flipButton.onclick=async()=>{
+    if(recording||flipButton.disabled)return;
+    const previousKind=activeCameraKind,goingFront=activeCameraKind!=='front';flipButton.disabled=true;shot.disabled=true;
+    try{
+      await flushCameraZoom();cameraZoom=1;captureDigitalZoom=1;paintZoom(1);
+      if(goingFront){await replaceCameraStream(frontCameraId,'front','user');frontCameraId=currentTrack()?.getSettings?.().deviceId||frontCameraId;zoomRange.min='1'}
+      else{await replaceCameraStream(mainCameraId,'main','environment');mainCameraId=currentTrack()?.getSettings?.().deviceId||mainCameraId;zoomRange.min=rearHalfAvailable?'.5':'1'}
+      await applyCameraZoom(1);
+    }catch(_){
+      toast('Não foi possível alternar a câmera neste aparelho.',4500);
+      try{if(previousKind==='front')await replaceCameraStream(frontCameraId,'front','user');else await replaceCameraStream(mainCameraId,'main','environment')}catch(_){}
+    }finally{flipButton.disabled=false;shot.disabled=false;paintVideoTransform()}
+  };
+  const recorderMimeType=()=>['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(type=>{try{return MediaRecorder.isTypeSupported?.(type)}catch(_){return false}})||'';
+  const updateRecordingClock=()=>{const elapsed=Math.min(MAX_VIDEO_MS,Math.max(0,Date.now()-recordingStartedAt));recordTime.textContent=`${formatVideoTime(elapsed)} / 05:00`};
+  const renderRecordingFrame=async stampLayout=>{
+    if(!recording||recordingFrameBusy||!recordingContext||!recordingCanvas)return;
+    recordingFrameBusy=true;
+    try{drawZoomedVideoFrame(recordingContext,video,recordingCanvas.width,recordingCanvas.height,captureDigitalZoom);await drawPhotoStamp(recordingContext,recordingCanvas.width,recordingCanvas.height,capture,state.gps,cameraHeading(),stampLayout)}catch(_){}finally{recordingFrameBusy=false}
+  };
+  const startRecordingLoop=stampLayout=>{const loop=()=>{if(!recording)return;renderRecordingFrame(stampLayout);recordingRaf=requestAnimationFrame(loop)};loop()};
+  const stopVideoRecording=()=>{
+    if(!recording)return;recording=false;cancelAnimationFrame(recordingRaf);clearInterval(recordingClockTimer);clearTimeout(recordingLimitTimer);updateRecordingClock();shot.disabled=true;shot.classList.remove('recording');layer.classList.remove('recording');
+    try{if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop()}catch(_){cleanupRecordingStreams();shot.disabled=false;flipButton.disabled=false;setModeControlsDisabled(false);toast('Não foi possível finalizar o vídeo.',5000)}
+  };
+  const startVideoRecording=async()=>{
+    if(recording)return;
+    const captureStreamFn=HTMLCanvasElement.prototype.captureStream||HTMLCanvasElement.prototype.webkitCaptureStream;
+    if(!('MediaRecorder' in window)||!captureStreamFn){toast('A gravação de vídeo carimbado não é compatível com este navegador.',5500);return}
+    shot.disabled=true;flipButton.disabled=true;setModeControlsDisabled(true);
+    try{
+      await flushCameraZoom();
+      if(video.readyState<2)await Promise.race([new Promise(r=>video.addEventListener('loadeddata',r,{once:true})),new Promise(r=>setTimeout(r,2200))]);
+      const sourceW=video.videoWidth||1920,sourceH=video.videoHeight||1080,size=videoOutputDimensions(sourceW,sourceH),stampLayout=readCameraStampLayout(layer);
+      recordingCanvas=document.createElement('canvas');recordingCanvas.width=size.width;recordingCanvas.height=size.height;recordingContext=recordingCanvas.getContext('2d');
+      drawZoomedVideoFrame(recordingContext,video,size.width,size.height,captureDigitalZoom);await drawPhotoStamp(recordingContext,size.width,size.height,capture,state.gps,cameraHeading(),stampLayout);
+      recordedStream=captureStreamFn.call(recordingCanvas,30);
+      try{microphoneStream=await navigator.mediaDevices.getUserMedia({video:false,audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});microphoneStream.getAudioTracks().forEach(track=>recordedStream.addTrack(track))}catch(_){toast('Microfone não autorizado. O vídeo será gravado sem áudio.',4800)}
+      const preferredMime=recorderMimeType(),options={videoBitsPerSecond:6000000,audioBitsPerSecond:128000,...(preferredMime?{mimeType:preferredMime}:{})};
+      try{mediaRecorder=new MediaRecorder(recordedStream,options)}catch(_){mediaRecorder=new MediaRecorder(recordedStream)}
+      const recorder=mediaRecorder;videoChunks=[];recordingStartedAt=Date.now();
+      recorder.ondataavailable=event=>{if(event.data?.size)videoChunks.push(event.data)};
+      recorder.onerror=()=>toast('A gravação encontrou um erro no navegador.',5000);
+      recorder.onstop=()=>{
+        const duration=Math.max(0,Date.now()-recordingStartedAt),type=recorder.mimeType||preferredMime||videoChunks.find(chunk=>chunk.type)?.type||'video/mp4',blob=new Blob(videoChunks,{type}),hasAudio=!!recordedStream?.getAudioTracks?.().length;
+        videoChunks=[];mediaRecorder=null;cleanupRecordingStreams();close(false);state.photoCapture=null;state.currentProjectId=null;state.photoMode=true;
+        if(blob.size)showRecordedVideo(blob,{name:capture.name,createdAt:new Date(recordingStartedAt).toISOString(),duration,type,width:size.width,height:size.height,audio:hasAudio});
+        else toast('O navegador não gerou o arquivo de vídeo.',5000);
+      };
+      recorder.start(1000);recording=true;shot.disabled=false;shot.classList.add('video','recording');shot.setAttribute('aria-label','Parar gravação');layer.classList.add('recording');recordTime.classList.remove('hidden');updateRecordingClock();
+      recordingClockTimer=setInterval(updateRecordingClock,250);recordingLimitTimer=setTimeout(()=>{toast('Limite de 5 minutos atingido. Finalizando vídeo…',4200);stopVideoRecording()},MAX_VIDEO_MS);startRecordingLoop(stampLayout);
+    }catch(err){recording=false;cleanupRecordingStreams();mediaRecorder=null;shot.disabled=false;flipButton.disabled=false;setModeControlsDisabled(false);toast(`Não foi possível iniciar o vídeo: ${err.message||err}`,5500)}
+  };
+  layer.querySelector('.camera-close').onclick=()=>{if(recording){if(confirm('Interromper e finalizar o vídeo atual?'))stopVideoRecording();return}close(true)};
   const refresh=()=>{
     if(!layer.isConnected)return;
     if(state.gps){
@@ -1283,15 +1378,17 @@ async function startLiveCamera(){
       layer.querySelector('#camCoordSecondary').textContent=shouldShowSecondaryPhoto()?coordFormat(state.gps.latitude,state.gps.longitude,state.settings.coordSecondary):'';
       layer.querySelector('#camAcc').textContent=`GPS ± ${state.gps.accuracy.toFixed(1)} m`;
     }
-    layer.querySelector('#camHead').textContent=`Direção ${state.heading.toFixed(0)}° ${cardinal(state.heading)}`;
-    layer.querySelector('.camera-compass .arrow').style.transform=`translate(-50%,-100%) rotate(${state.heading}deg)`;
+    const heading=cameraHeading();layer.querySelector('#camHead').textContent=`Direção ${heading.toFixed(0)}° ${cardinal(heading)}`;
+    layer.querySelector('.camera-compass .arrow').style.transform=`translate(-50%,-100%) rotate(${heading}deg)`;
     requestAnimationFrame(refresh);
   };refresh();
-  layer.querySelector('.camera-shot').onclick=async()=>{
-    const shot=layer.querySelector('.camera-shot');if(shot.disabled)return;shot.disabled=true;
+  shot.onclick=async()=>{
+    if(shot.disabled)return;
+    if(cameraMode==='video'){if(recording)stopVideoRecording();else await startVideoRecording();return}
+    shot.disabled=true;
     try{
       await flushCameraZoom();
-      const gps=state.gps||await waitForGps(3500);
+      const gps=state.gps||await waitForGps(3500),heading=cameraHeading();
       if(video.readyState<2)await Promise.race([new Promise(r=>video.addEventListener('loadeddata',r,{once:true})),new Promise(r=>setTimeout(r,2200))]);
       let source=video,photoSource=null;
       if(typeof ImageCapture==='function'&&currentTrack())try{const original=await new ImageCapture(currentTrack()).takePhoto();photoSource=await loadPhotoSource(original);source=photoSource}catch(_){}
@@ -1299,12 +1396,17 @@ async function startLiveCamera(){
       const sourceW=source.videoWidth||source.width||1920,sourceH=source.videoHeight||source.height||1080,size=photoOutputDimensions(sourceW,sourceH,capture.resolution);
       const canvas=document.createElement('canvas');canvas.width=size.width;canvas.height=size.height;capture.outputWidth=size.width;capture.outputHeight=size.height;
       const ctx=canvas.getContext('2d');drawZoomedVideoFrame(ctx,source,canvas.width,canvas.height,captureDigitalZoom);photoSource?.close?.();
-      await drawPhotoStamp(ctx,canvas.width,canvas.height,capture,gps,state.heading,stampLayout);
-      const jpeg=await canvasToJpeg(canvas),finalJpeg=gps?await insertGpsExif(jpeg,gps,state.heading):jpeg;
-      const stored=await storeCapturedPhoto(finalJpeg,gps,state.heading,capture);close(false);await finishPhotoCapture(finalJpeg,stored,gps);
+      await drawPhotoStamp(ctx,canvas.width,canvas.height,capture,gps,heading,stampLayout);
+      const jpeg=await canvasToJpeg(canvas),finalJpeg=gps?await insertGpsExif(jpeg,gps,heading):jpeg;
+      const stored=await storeCapturedPhoto(finalJpeg,gps,heading,capture);close(false);await finishPhotoCapture(finalJpeg,stored,gps);
     }catch(err){shot.disabled=false;toast(`Não foi possível salvar a foto: ${err.message||err}`,5000)}
   };
 }
+function videoOutputDimensions(sourceW,sourceH){
+  const long=Math.max(sourceW,sourceH),short=Math.min(sourceW,sourceH),scale=Math.min(1,1920/Math.max(1,long),1080/Math.max(1,short));
+  return {width:Math.max(2,Math.round(sourceW*scale/2)*2),height:Math.max(2,Math.round(sourceH*scale/2)*2)};
+}
+function formatVideoTime(ms){const seconds=Math.max(0,Math.floor(ms/1000));return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`}
 function drawZoomedVideoFrame(ctx,video,w,h,zoom=1){
   const sourceW=video.videoWidth||video.width||w,sourceH=video.videoHeight||video.height||h,z=Math.max(1,Math.min(5,Number(zoom)||1)),cropW=sourceW/z,cropH=sourceH/z;
   ctx.drawImage(video,(sourceW-cropW)/2,(sourceH-cropH)/2,cropW,cropH,0,0,w,h);
@@ -1442,6 +1544,30 @@ async function sharePhoto(key){
   const name=photoDisplayName(item),file=new File([item.blob],photoFileName(item.createdAt,name),{type:'image/jpeg'});
   if(navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:name})}catch(_){}}
   else triggerPhotoDownload(item.blob,item.createdAt,name);
+}
+function videoFileName(createdAt,name='Vídeo',type='video/mp4'){
+  const safe=String(name||'Video').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60)||'Video',extension=/webm/i.test(type)?'webm':'mp4';
+  return `Lima_Field_${safe}_${createdAt.replace(/[:.]/g,'-')}.${extension}`;
+}
+function triggerVideoDownload(blob,meta){
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=videoFileName(meta.createdAt,meta.name,meta.type);a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+async function shareVideoBlob(blob,meta,saveMode=false){
+  const file=new File([blob],videoFileName(meta.createdAt,meta.name,meta.type),{type:meta.type||blob.type||'video/mp4'});
+  let canShare=false;try{canShare=!!navigator.canShare?.({files:[file]})}catch(_){}
+  if(canShare){
+    if(saveMode&&isIos())toast('No menu do iPhone, escolha “Salvar Vídeo”.',5200);
+    try{await navigator.share({files:[file],title:String(meta.name||'Lima Field')});return 'shared'}catch(err){return err?.name==='AbortError'?'cancelled':'blocked'}
+  }
+  try{triggerVideoDownload(blob,meta);return 'download'}catch(_){return 'blocked'}
+}
+function showRecordedVideo(blob,meta){
+  const url=URL.createObjectURL(blob),megabytes=blob.size/1048576;
+  openModal('Vídeo gravado',`<video class="video-review" src="${url}" controls playsinline preload="metadata"></video><div class="note" style="margin-top:10px">${esc(meta.name)} • ${formatVideoTime(meta.duration)} • ${meta.width} × ${meta.height} px • ${megabytes.toFixed(1)} MB • ${meta.audio?'com áudio':'sem áudio'}<br>O vídeo fica nesta prévia temporária. Salve ou compartilhe antes de fechá-la.</div><div class="action-row" style="margin-top:12px"><button id="saveRecordedVideo" class="primary">Salvar no celular</button><button id="shareRecordedVideo" class="secondary">Compartilhar</button><button id="discardRecordedVideo" class="secondary danger">Descartar</button></div>`);
+  let released=false;const release=()=>{if(released)return;released=true;URL.revokeObjectURL(url);if(modalBody.querySelector('.video-review'))modalBody.innerHTML=''};modal.addEventListener('close',release,{once:true});
+  $('#saveRecordedVideo').onclick=async()=>{const result=await shareVideoBlob(blob,meta,true);if(result==='download')toast('Download do vídeo solicitado');else if(result==='shared')toast('Ação de salvamento concluída');else if(result==='blocked')toast('O navegador bloqueou o salvamento do vídeo',5000)};
+  $('#shareRecordedVideo').onclick=async()=>{const result=await shareVideoBlob(blob,meta,false);if(result==='download')toast('Compartilhamento indisponível; download solicitado');else if(result==='blocked')toast('Não foi possível compartilhar o vídeo',5000)};
+  $('#discardRecordedVideo').onclick=()=>modal.close();
 }
 
 /* Minimal EXIF APP1 GPS writer for the JPEG created by canvas. */
