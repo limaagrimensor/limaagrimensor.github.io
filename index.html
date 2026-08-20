@@ -67,6 +67,9 @@ h1{font-size:28px;margin-bottom:6px}
 .quick-btn.active{background:var(--green);color:#041008}
 
 .map-wrap{position:relative;margin:0 9px calc(10px + var(--safe-bottom));border-radius:18px;overflow:hidden;border:1px solid #2c372f;background:#1c241f;height:70vh;height:70dvh;min-height:520px;max-height:820px}
+.map-wrap.map-immersive{position:fixed;inset:0;z-index:80;width:100vw;height:100vh;height:100dvh;min-height:0;max-width:none;max-height:none;margin:0;border:0;border-radius:0}
+.map-wrap.map-immersive .map-layer-switch,.map-wrap.map-immersive .map-controls,.map-wrap.map-immersive .map-message,.map-wrap.map-immersive .coords-panel,.map-wrap.map-immersive .nav-compass,.map-wrap.map-immersive .draw-toolbar{visibility:hidden;opacity:0;pointer-events:none}
+.map-wrap.map-immersive .map-attribution{right:6px;bottom:calc(5px + var(--safe-bottom));max-width:60%;opacity:.55}
 .map-stack{position:absolute;inset:0;overflow:hidden}
 #baseMapCanvas,#fieldCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #baseMapCanvas{z-index:1;pointer-events:none}
@@ -211,9 +214,9 @@ h1{font-size:28px;margin-bottom:6px}
   <div id="toast" class="toast"></div>
 
   <script>
-/* Lima Field PWA v0.4.6 */
+/* Lima Field PWA v0.4.7 */
 
-const BUILD_VERSION = '0.4.6';
+const BUILD_VERSION = '0.4.7';
 const PDFJS_PAYLOAD_URL='https://raw.githubusercontent.com/limaagrimensor/limaagrimensor.github.io/a31b65197efb29e8869ba844cc402641234120aa/index.html';
 let PDFJS_MODULE_B64='',PDFJS_WORKER_B64='',pdfJsPayloadPromise=null;
 async function ensurePdfJsPayload(){
@@ -268,6 +271,8 @@ const state = {
   mapView: null,
   layersProjectId: null,
   followGps: false,
+  mapImmersive: false,
+  mapImmersiveHintShown: false,
   gpsUpdatedAt: 0,
   gpsWaiters: [],
   activeGeoPdf: null,
@@ -407,7 +412,7 @@ function setMapViewAroundGps(gps,radiusMeters=220){
 }
 
 function renderHome(){
-  state.photoMode=false;state.photoCapture=null;
+  state.photoMode=false;state.photoCapture=null;state.mapImmersive=false;
   backBtn.classList.add('hidden');
   main.innerHTML = `
     <section class="home-hero">
@@ -481,6 +486,7 @@ function projectHeader(){
 }
 
 function renderMapTab(){
+  if(state.mode!=='browse')state.mapImmersive=false;
   const pdfVisible=!!state.activeGeoPdf?.visible;
   const kmlLayers=new Set(state.mapFeatures.map(f=>f.sourceKey).filter(Boolean)).size;
   const layerCount=(pdfVisible?1:0)+kmlLayers+state.savedAreas.length+state.savedPoints.length+state.savedLines.length+state.tracks.length;
@@ -494,7 +500,7 @@ function renderMapTab(){
     <button class="quick-btn ${state.activeTrack?'active':''}" id="trackGps"><b>🥾</b>Rastreio</button>
     <button class="quick-btn" id="goPoint"><b>🧭</b>Ir ao ponto</button>
   </div>
-  <div class="map-wrap ${state.mode==='draw'||state.mode==='measure'?'editing':''}">
+  <div class="map-wrap ${state.mode==='draw'||state.mode==='measure'?'editing':''} ${state.mapImmersive?'map-immersive':''}">
     <div class="map-stack"><canvas id="baseMapCanvas"></canvas><div id="geoPdfMapOverlay" class="geo-pdf-map-overlay"></div><canvas id="fieldCanvas"></canvas></div>
     <div class="map-center-reticle" aria-hidden="true"><span class="reticle-center"></span></div>
     <div class="map-layer-switch">
@@ -541,6 +547,15 @@ function renderMapTab(){
   $('#zoomIn').onclick=()=>manualZoom(1.7);
   $('#zoomOut').onclick=()=>manualZoom(1/1.7);
   updateCoordPanel(); updateNavigation();
+}
+
+function setMapImmersive(enabled){
+  if(enabled&&state.mode!=='browse')return;
+  const wrap=$('.map-wrap'),base=$('#baseMapCanvas'),canvas=$('#fieldCanvas');if(!wrap||!base||!canvas)return;
+  state.mapImmersive=!!enabled;wrap.classList.toggle('map-immersive',state.mapImmersive);
+  wrap.setAttribute('aria-label',state.mapImmersive?'Mapa em tela cheia. Toque para restaurar as ferramentas.':'Mapa. Toque para abrir em tela cheia.');
+  requestAnimationFrame(()=>{fitCanvas(base);fitCanvas(canvas);drawMap();updateCoordPanel();updateNavigation()});
+  if(state.mapImmersive&&!state.mapImmersiveHintShown){state.mapImmersiveHintShown=true;toast('Tela cheia ativada • toque no mapa para restaurar as ferramentas',3200)}
 }
 
 function base64BlobUrl(base64,type){
@@ -981,6 +996,7 @@ function bindCanvas(canvas){
       if(ll&&(state.mode==='draw'||state.mode==='measure')){const first=state.drawPoints[0],fp=first&&latLonToCanvas(first);if(state.mode==='draw'&&state.drawPoints.length>=3&&fp&&Math.hypot(p.x-fp.x,p.y-fp.y)<22*canvasDpr(canvas)){finishDrawnArea()}else{state.drawPoints.push(ll);persistDrawing();drawMap();updateCoordPanel()}}
       else if(ll&&state.mode==='dest'){state.destination=ll;state.mode='browse';drawMap();updateNavigation()}
       else if(ll&&state.mode==='point'){savePoint(ll,state.pendingPoint||{name:`Ponto ${state.savedPoints.length+1}`});state.pendingPoint=null}
+      else if(state.mode==='browse')setMapImmersive(!state.mapImmersive);
     }
     if(pointers.size===1){const remain=[...pointers.values()][0];remain.startX=remain.x;remain.startY=remain.y;lastCenter=null;lastDistance=0}
     if(!pointers.size){lastCenter=null;lastDistance=0;setTimeout(()=>{usedMulti=false},0)}
