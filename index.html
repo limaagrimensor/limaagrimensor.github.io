@@ -226,9 +226,9 @@ h1{font-size:28px;margin-bottom:6px}
   <div id="toast" class="toast"></div>
 
   <script>
-/* Lima Field PWA v0.4.11 */
+/* Lima Field PWA v0.4.12 */
 
-const BUILD_VERSION = '0.4.11';
+const BUILD_VERSION = '0.4.12';
 const PDFJS_PAYLOAD_URL='https://raw.githubusercontent.com/limaagrimensor/limaagrimensor.github.io/a31b65197efb29e8869ba844cc402641234120aa/index.html';
 let PDFJS_MODULE_B64='',PDFJS_WORKER_B64='',pdfJsPayloadPromise=null;
 async function ensurePdfJsPayload(){
@@ -458,7 +458,7 @@ function renderHome(){
 
 function promptPhotoName(){
   openModal('Novo registro',`
-    <div class="note">A foto ou o vídeo não ficará vinculado a nenhum projeto. Os vídeos são salvos diretamente no celular e não ocupam o armazenamento interno do app.</div>
+    <div class="note">As fotos serão salvas em Registros de campo. Os vídeos são salvos diretamente no celular e não ocupam o armazenamento interno do app.</div>
     <div class="form-row"><label>Nome da foto ou do vídeo</label><input id="photoName" maxlength="80" placeholder="Ex.: Marco norte, Entrada da fazenda, Área 01" autofocus></div>
     <div class="form-row"><label>Resolução da foto</label><select id="photoResolution"><option value="max" ${state.settings.photoResolution==='max'?'selected':''}>Máxima disponível (padrão)</option><option value="12mp" ${state.settings.photoResolution==='12mp'?'selected':''}>Alta • até 12 MP</option><option value="6mp" ${state.settings.photoResolution==='6mp'?'selected':''}>Média • até 6 MP</option><option value="3mp" ${state.settings.photoResolution==='3mp'?'selected':''}>Leve • até 3 MP</option></select><div class="small muted" style="margin-top:5px">Vídeo: até 1080p, 30 fps, áudio e limite de 5 minutos.</div></div>
     <div class="action-row"><button id="startNamedPhoto" class="primary">Abrir câmera</button><button id="cancelNamedPhoto" class="secondary">Cancelar</button></div>`);
@@ -1174,7 +1174,7 @@ async function renderPhotoMode(){
     <section class="home-hero">
       <div class="kicker">MODO CÂMERA • v${BUILD_VERSION}</div>
       <h1>Registros de campo</h1>
-      <p class="muted">Fotografe ou grave vídeo sem criar ou vincular um projeto. Escolha o nome antes de abrir a câmera.</p>
+      <p class="muted">Fotografe ou grave vídeos de campo. Escolha um nome antes de abrir a câmera.</p>
       <div class="home-actions"><button id="newModePhoto" class="primary">📷 Abrir câmera</button></div>
     </section>
     <div class="card note">Use os botões, o controle deslizante ou dois dedos na imagem para ajustar de 0,5× a 5×. O 0,5× usa a lente ultra-angular quando ela é disponibilizada pelo aparelho.</div>
@@ -1240,7 +1240,7 @@ async function startLiveCamera(){
       <button class="icon-btn camera-close" aria-label="Fechar câmera">×</button>
       <button class="icon-btn camera-flip" aria-label="Alternar câmera frontal e traseira" title="Virar câmera">↻</button>
       <div class="camera-zoom" aria-label="Zoom da câmera"><button class="camera-zoom-out" aria-label="Diminuir zoom">−</button><input class="camera-zoom-range" type="range" min="0.5" max="5" step="0.1" value="1" aria-label="Zoom de meio a cinco vezes"><span class="camera-zoom-value">1,0×</span><button class="camera-zoom-in" aria-label="Aumentar zoom">+</button></div>
-      <div class="camera-info"><div class="camera-brand-slot"></div><div id="camPhotoName">${esc(capture.name)}</div><div id="camProject">Modo Foto • sem vínculo com projeto</div><div id="camResolution">Resolução: ${photoResolutionLabel(capture.resolution)}</div><div id="camCoord">Aguardando GPS…</div><div id="camCoordSecondary"></div><div id="camAcc"></div></div>
+      <div class="camera-info"><div class="camera-brand-slot"></div><div id="camPhotoName">${esc(capture.name)}</div><div id="camProject">Modo Foto</div><div id="camResolution">Resolução: ${photoResolutionLabel(capture.resolution)}</div><div id="camCoord">Aguardando GPS…</div><div id="camCoordSecondary"></div><div id="camAcc"></div></div>
       <div class="camera-direction"><div class="camera-compass"><div class="arrow"></div></div><div id="camHead"></div></div>
       <div class="camera-record-time hidden">00:00 / 05:00</div>
       <div class="camera-mode" aria-label="Modo da câmera"><button class="active" data-camera-mode="photo">Foto</button><button data-camera-mode="video">Vídeo</button></div>
@@ -1313,7 +1313,7 @@ async function startLiveCamera(){
     cameraMode=mode;modeButtons.forEach(button=>button.classList.toggle('active',button.dataset.cameraMode===mode));
     shot.classList.toggle('video',mode==='video');shot.classList.remove('recording');shot.setAttribute('aria-label',mode==='video'?'Iniciar gravação':'Fotografar');
     recordTime.classList.add('hidden');
-    layer.querySelector('#camProject').textContent=mode==='video'?'Modo Vídeo • sem vínculo com projeto':'Modo Foto • sem vínculo com projeto';
+    layer.querySelector('#camProject').textContent=mode==='video'?'Modo Vídeo':'Modo Foto';
     layer.querySelector('#camResolution').textContent=mode==='video'?'Vídeo: até 1080p • 30 fps • até 5 min':`Resolução: ${photoResolutionLabel(capture.resolution)}`;
   };
   modeButtons.forEach(button=>button.onclick=()=>setCameraMode(button.dataset.cameraMode));
