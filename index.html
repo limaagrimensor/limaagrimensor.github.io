@@ -226,9 +226,9 @@ h1{font-size:28px;margin-bottom:6px}
   <div id="toast" class="toast"></div>
 
   <script>
-/* Lima Field PWA v0.4.9 */
+/* Lima Field PWA v0.4.10 */
 
-const BUILD_VERSION = '0.4.9';
+const BUILD_VERSION = '0.4.10';
 const PDFJS_PAYLOAD_URL='https://raw.githubusercontent.com/limaagrimensor/limaagrimensor.github.io/a31b65197efb29e8869ba844cc402641234120aa/index.html';
 let PDFJS_MODULE_B64='',PDFJS_WORKER_B64='',pdfJsPayloadPromise=null;
 async function ensurePdfJsPayload(){
@@ -315,7 +315,7 @@ const state = {
 
 const tileCache=new Map();
 const BASE_MAPS={
-  satellite:{label:'Satélite',maxZoom:19,viewMaxZoom:23,fallbackLevels:5,attribution:'Imagens © Esri, Vantor, Earthstar Geographics e comunidade GIS',url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`},
+  satellite:{label:'Satélite',maxZoom:19,viewMaxZoom:23,fallbackLevels:5,attribution:'Imagens © Esri, Vantor, Earthstar Geographics e comunidade GIS',url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}?blankTile=false`},
   streets:{label:'Mapa',maxZoom:19,attribution:'© OpenStreetMap contributors',url:(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`},
   sentinel:{label:'Sentinel 2025',maxZoom:14,attribution:'Sentinel-2 Cloudless 2025 © EOX • dados Copernicus Sentinel 2025',attributionHtml:'Sentinel-2 Cloudless 2025 © <a href="https://maps.eox.at/" target="_blank" rel="noopener">EOX</a> • dados Copernicus 2025',url:(z,x,y)=>`https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/g/${z}/${y}/${x}.jpg`}
 };
