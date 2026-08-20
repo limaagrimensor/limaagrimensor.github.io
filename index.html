@@ -68,8 +68,10 @@ h1{font-size:28px;margin-bottom:6px}
 
 .map-wrap{position:relative;margin:0 9px calc(10px + var(--safe-bottom));border-radius:18px;overflow:hidden;border:1px solid #2c372f;background:#1c241f;height:70vh;height:70dvh;min-height:520px;max-height:820px}
 .map-wrap.map-immersive{position:fixed;inset:0;z-index:80;width:100vw;height:100vh;height:100dvh;min-height:0;max-width:none;max-height:none;margin:0;border:0;border-radius:0}
-.map-wrap.map-immersive .map-layer-switch,.map-wrap.map-immersive .map-controls,.map-wrap.map-immersive .map-message,.map-wrap.map-immersive .coords-panel,.map-wrap.map-immersive .nav-compass,.map-wrap.map-immersive .draw-toolbar{visibility:hidden;opacity:0;pointer-events:none}
-.map-wrap.map-immersive .map-attribution{right:6px;bottom:calc(5px + var(--safe-bottom));max-width:60%;opacity:.55}
+.map-wrap.map-immersive .map-layer-switch,.map-wrap.map-immersive .map-controls,.map-wrap.map-immersive .map-message,.map-wrap.map-immersive .draw-toolbar{visibility:hidden;opacity:0;pointer-events:none}
+.map-wrap.map-immersive .coords-panel{bottom:calc(10px + var(--safe-bottom))}
+.map-wrap.map-immersive .nav-compass{right:10px;top:calc(18px + var(--safe-top))}
+.map-wrap.map-immersive .map-attribution{right:6px;bottom:calc(58px + var(--safe-bottom));max-width:60%;opacity:.55}
 .map-stack{position:absolute;inset:0;overflow:hidden}
 #baseMapCanvas,#fieldCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #baseMapCanvas{z-index:1;pointer-events:none}
@@ -85,12 +87,12 @@ h1{font-size:28px;margin-bottom:6px}
 .map-controls button{width:38px;height:38px;border:1px solid #3c4d41;border-radius:12px;background:rgba(16,21,18,.92);color:white;font-size:22px;font-weight:900}
 .map-gesture-hint{position:absolute;right:10px;top:12px;color:#dce5de;background:rgba(16,21,18,.78);border-radius:999px;padding:6px 9px;font-size:10px;pointer-events:none}
 .map-message{position:absolute;left:10px;right:10px;top:53px;z-index:6;background:rgba(16,21,18,.89);border:1px solid #334238;border-radius:12px;padding:8px 10px;font-size:11px;pointer-events:none}
-.map-center-reticle{position:absolute;left:50%;top:50%;z-index:5;width:36px;height:36px;transform:translate(-50%,-50%);border:3px solid #111713;border-radius:50%;background:rgba(255,255,255,.08);box-shadow:0 0 0 2px rgba(255,255,255,.96),0 2px 8px rgba(0,0,0,.78);pointer-events:none}
+.map-center-reticle{position:absolute;left:50%;top:50%;z-index:5;width:30px;height:30px;transform:translate(-50%,-50%);border:2px solid #111713;border-radius:50%;background:rgba(255,255,255,.06);box-shadow:0 0 0 2px rgba(255,255,255,.96),0 2px 7px rgba(0,0,0,.72);pointer-events:none}
 .map-center-reticle::before,.map-center-reticle::after{content:"";position:absolute;background:#111713;box-shadow:0 0 0 1px rgba(255,255,255,.96)}
-.map-center-reticle::before{left:50%;top:-12px;width:3px;height:60px;transform:translateX(-50%)}
-.map-center-reticle::after{left:-12px;top:50%;width:60px;height:3px;transform:translateY(-50%)}
-.reticle-center{position:absolute;left:50%;top:50%;z-index:2;width:8px;height:8px;transform:translate(-50%,-50%);border:1.5px solid white;border-radius:50%;background:var(--green);box-shadow:0 1px 4px rgba(0,0,0,.75)}
-.coords-panel{position:absolute;left:50%;right:auto;bottom:10px;z-index:7;width:max-content;max-width:calc(100% - 82px);transform:translateX(-50%);background:rgba(14,19,16,.91);border:1px solid #405146;border-radius:999px;padding:7px 11px;box-shadow:0 4px 14px rgba(0,0,0,.32);backdrop-filter:blur(8px);text-align:center}
+.map-center-reticle::before{left:50%;top:-10px;width:2px;height:50px;transform:translateX(-50%)}
+.map-center-reticle::after{left:-10px;top:50%;width:50px;height:2px;transform:translateY(-50%)}
+.reticle-center{position:absolute;left:50%;top:50%;z-index:2;width:6px;height:6px;transform:translate(-50%,-50%);border:1px solid white;border-radius:50%;background:var(--green);box-shadow:0 1px 3px rgba(0,0,0,.72)}
+.coords-panel{position:absolute;left:50%;right:auto;bottom:10px;z-index:7;width:max-content;max-width:calc(100% - 34px);transform:translateX(-50%);background:transparent;border:0;border-radius:0;padding:4px 6px;box-shadow:none;backdrop-filter:none;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.98),0 0 4px rgba(0,0,0,.9)}
 .coords-line{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0}
 .coords-target{flex:0 0 auto;color:var(--green);font-size:15px;line-height:1}
 .coords-main{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:850;font-size:11.5px;letter-spacing:.01em}
@@ -214,9 +216,9 @@ h1{font-size:28px;margin-bottom:6px}
   <div id="toast" class="toast"></div>
 
   <script>
-/* Lima Field PWA v0.4.7 */
+/* Lima Field PWA v0.4.8 */
 
-const BUILD_VERSION = '0.4.7';
+const BUILD_VERSION = '0.4.8';
 const PDFJS_PAYLOAD_URL='https://raw.githubusercontent.com/limaagrimensor/limaagrimensor.github.io/a31b65197efb29e8869ba844cc402641234120aa/index.html';
 let PDFJS_MODULE_B64='',PDFJS_WORKER_B64='',pdfJsPayloadPromise=null;
 async function ensurePdfJsPayload(){
@@ -303,10 +305,11 @@ const state = {
 
 const tileCache=new Map();
 const BASE_MAPS={
-  satellite:{label:'Satélite',maxZoom:21,attribution:'Imagens © Esri, Vantor, Earthstar Geographics e comunidade GIS',url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`},
+  satellite:{label:'Satélite',maxZoom:20,fallbackLevels:5,attribution:'Imagens © Esri, Vantor, Earthstar Geographics e comunidade GIS',url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`},
   streets:{label:'Mapa',maxZoom:19,attribution:'© OpenStreetMap contributors',url:(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`},
   sentinel:{label:'Sentinel 2025',maxZoom:14,attribution:'Sentinel-2 Cloudless 2025 © EOX • dados Copernicus Sentinel 2025',attributionHtml:'Sentinel-2 Cloudless 2025 © <a href="https://maps.eox.at/" target="_blank" rel="noopener">EOX</a> • dados Copernicus 2025',url:(z,x,y)=>`https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/g/${z}/${y}/${x}.jpg`}
 };
+function mapMaxViewZoom(source=BASE_MAPS[state.settings.baseMap]||BASE_MAPS.satellite){return Math.min(23,(source.maxZoom||21)+3)}
 const GPS_MARKER_PX=Object.freeze({halo:22,core:8.5,ring:13,ringWidth:2.5});
 if(localStorage.getItem('lf_defaults_040')!=='1'){state.settings.areaPrimary='ha';state.settings.areaSecondaryEnabled=true;state.settings.areaSecondary='alq_sp';state.settings.geoPdfOpacity=1;localStorage.setItem('lf_defaults_040','1');saveState()}
 
@@ -534,7 +537,7 @@ function renderMapTab(){
   $('#goPoint').onclick=()=>showGoPointModal();
   $('#drawArea').classList.toggle('active',state.mode==='draw');
 
-  document.querySelectorAll('[data-base-map]').forEach(b=>b.onclick=()=>{state.settings.baseMap=b.dataset.baseMap;saveState();document.querySelectorAll('[data-base-map]').forEach(x=>x.classList.toggle('active',x===b));drawMap();if(b.dataset.baseMap==='sentinel')toast('Sentinel 2025 • visão geral anual; após o zoom 14 a imagem apenas amplia.',4500)});
+  document.querySelectorAll('[data-base-map]').forEach(b=>b.onclick=()=>{state.settings.baseMap=b.dataset.baseMap;if(state.mapView?.zoom>mapMaxViewZoom())state.mapView.zoom=mapMaxViewZoom();saveState();document.querySelectorAll('[data-base-map]').forEach(x=>x.classList.toggle('active',x===b));drawMap();if(b.dataset.baseMap==='sentinel')toast('Sentinel 2025 • visão geral anual; após o zoom 14 a imagem apenas amplia.',4500)});
   $('#layersBtn').onclick=showLayersModal;
   if($('#drawUndo'))$('#drawUndo').onclick=()=>{state.drawPoints.pop();persistDrawing();drawMap();updateCoordPanel()};
   if($('#drawClear'))$('#drawClear').onclick=()=>{state.drawPoints=[];state.drawHover=null;persistDrawing();state.mode='browse';renderMapTab()};
@@ -1051,7 +1054,7 @@ function panMap(dx,dy,canvas,redraw=true){
 }
 function zoomMapAt(factor,x,y,canvas,redraw=true){
   factor=Math.max(.4,Math.min(2.5,factor));const v=ensureMapView(canvas),anchor=canvasToLatLon(x,y);if(!anchor)return;
-  const zoom=Math.max(3,Math.min(21,v.zoom+Math.log2(factor))),dpr=canvasDpr(canvas),aw=projectWorld(anchor.lat,anchor.lon,zoom,dpr),center=unprojectWorld(aw.x-(x-canvas.width/2),aw.y-(y-canvas.height/2),zoom,dpr);
+  const zoom=Math.max(3,Math.min(mapMaxViewZoom(),v.zoom+Math.log2(factor))),dpr=canvasDpr(canvas),aw=projectWorld(anchor.lat,anchor.lon,zoom,dpr),center=unprojectWorld(aw.x-(x-canvas.width/2),aw.y-(y-canvas.height/2),zoom,dpr);
   state.mapView={centerLat:center.lat,centerLon:center.lon,zoom};if(redraw)drawMap();
 }
 function latLonToCanvas(p){
@@ -1066,12 +1069,22 @@ function getMapTile(source,z,x,y){
   if(!rec||rec.status==='error'&&now-(rec.failedAt||0)>15000){const img=new Image();rec={img,status:'loading',used:now,failedAt:0};tileCache.set(key,rec);img.onload=()=>{rec.status='loaded';rec.used=Date.now();if($('#baseMapCanvas'))drawMap()};img.onerror=()=>{rec.status='error';rec.failedAt=Date.now()};img.src=source.url(z,wrapped,y);if(tileCache.size>260){const old=[...tileCache.entries()].filter(([,v])=>v.status!=='loading').sort((a,b)=>a[1].used-b[1].used).slice(0,40);old.forEach(([k])=>tileCache.delete(k))}}
   rec.used=Date.now();return rec;
 }
+function drawMapTileWithFallback(ctx,source,z,tx,ty,sx,sy,tileSize){
+  const tile=getMapTile(source,z,tx,ty);if(tile?.status==='loaded'){ctx.drawImage(tile.img,sx,sy,tileSize+1,tileSize+1);return true}
+  const levels=Math.max(1,source.fallbackLevels||4);
+  for(let delta=1;delta<=levels&&z-delta>=2;delta++){
+    const factor=2**delta,parent=getMapTile(source,z-delta,Math.floor(tx/factor),Math.floor(ty/factor));if(parent?.status!=='loaded')continue;
+    const crop=256/factor,cropX=((tx%factor)+factor)%factor*crop,cropY=((ty%factor)+factor)%factor*crop,smoothing=ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled=false;ctx.drawImage(parent.img,cropX,cropY,crop,crop,sx,sy,tileSize+1,tileSize+1);ctx.imageSmoothingEnabled=smoothing;return true;
+  }
+  return false;
+}
 function drawBaseMap(){
   const c=$('#baseMapCanvas');if(!c)return;const ctx=c.getContext('2d'),v=ensureMapView($('#fieldCanvas')),source=BASE_MAPS[state.settings.baseMap]||BASE_MAPS.satellite;
   ctx.clearRect(0,0,c.width,c.height);const grad=ctx.createLinearGradient(0,0,0,c.height);grad.addColorStop(0,'#17251d');grad.addColorStop(1,'#223027');ctx.fillStyle=grad;ctx.fillRect(0,0,c.width,c.height);
   ctx.strokeStyle='#2d4033';ctx.lineWidth=1;for(let i=1;i<7;i++){ctx.beginPath();ctx.moveTo(c.width*i/7,0);ctx.lineTo(c.width*i/7,c.height);ctx.stroke()}for(let i=1;i<9;i++){ctx.beginPath();ctx.moveTo(0,c.height*i/9);ctx.lineTo(c.width,c.height*i/9);ctx.stroke()}
   const dpr=canvasDpr(c),z=Math.max(2,Math.min(source.maxZoom||21,Math.floor(v.zoom))),scale=Math.pow(2,v.zoom-z)*dpr,tileSize=256*scale,center=projectWorld(v.centerLat,v.centerLon,z,1),minX=Math.floor((center.x-c.width/(2*scale))/256)-1,maxX=Math.floor((center.x+c.width/(2*scale))/256)+1,minY=Math.floor((center.y-c.height/(2*scale))/256)-1,maxY=Math.floor((center.y+c.height/(2*scale))/256)+1;
-  for(let ty=minY;ty<=maxY;ty++)for(let tx=minX;tx<=maxX;tx++){const rec=getMapTile(source,z,tx,ty),sx=(tx*256-center.x)*scale+c.width/2,sy=(ty*256-center.y)*scale+c.height/2;if(rec?.status==='loaded')ctx.drawImage(rec.img,sx,sy,tileSize+1,tileSize+1)}
+  for(let ty=minY;ty<=maxY;ty++)for(let tx=minX;tx<=maxX;tx++){const sx=(tx*256-center.x)*scale+c.width/2,sy=(ty*256-center.y)*scale+c.height/2;drawMapTileWithFallback(ctx,source,z,tx,ty,sx,sy,tileSize)}
   const a=$('#mapAttribution');if(a)a.innerHTML=source.attributionHtml||esc(source.attribution);
 }
 function drawMap(){
