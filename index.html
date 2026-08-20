@@ -226,9 +226,9 @@ h1{font-size:28px;margin-bottom:6px}
   <div id="toast" class="toast"></div>
 
   <script>
-/* Lima Field PWA v0.4.12 */
+/* Lima Field PWA v0.4.15 */
 
-const BUILD_VERSION = '0.4.12';
+const BUILD_VERSION = '0.4.15';
 const PDFJS_PAYLOAD_URL='https://raw.githubusercontent.com/limaagrimensor/limaagrimensor.github.io/a31b65197efb29e8869ba844cc402641234120aa/index.html';
 let PDFJS_MODULE_B64='',PDFJS_WORKER_B64='',pdfJsPayloadPromise=null;
 async function ensurePdfJsPayload(){
@@ -426,12 +426,13 @@ function setMapViewAroundGps(gps,radiusMeters=220){
 
 function renderHome(){
   state.photoMode=false;state.photoCapture=null;state.mapImmersive=false;
+  buildBadge.classList.remove('hidden');
   backBtn.classList.add('hidden');
   main.innerHTML = `
     <section class="home-hero">
-      <div class="kicker">CAMPO OFFLINE • v${BUILD_VERSION}</div>
+      <div class="kicker">CAMPO OFFLINE</div>
       <h1>Seus projetos</h1>
-      <p class="muted">Projetos de mapa separados dos registros de foto e vídeo.</p>
+      <p class="muted">Carregue mapas, meça áreas e distâncias, marque pontos e registre rastreios. Para fotos e vídeos de campo, use a Câmera.</p>
       <div class="home-actions"><button id="openPhotoMode" class="primary">📷 Câmera</button><button id="newProject" class="secondary">+ Novo projeto</button></div>
     </section>
     <section id="projectList"></section>`;
@@ -489,6 +490,7 @@ function createProjectModal(){
 async function renderProject(){
   const p=currentProject(); if(!p){renderHome();return}
   state.photoMode=false;
+  buildBadge.classList.add('hidden');
   backBtn.classList.remove('hidden');
   await loadProjectLayers();renderMapTab();
 }
@@ -1169,10 +1171,11 @@ function updateNavigation(){
 
 async function renderPhotoMode(){
   state.photoMode=true;state.currentProjectId=null;
+  buildBadge.classList.add('hidden');
   backBtn.classList.remove('hidden');
   main.innerHTML=`
     <section class="home-hero">
-      <div class="kicker">MODO CÂMERA • v${BUILD_VERSION}</div>
+      <div class="kicker">MODO CÂMERA</div>
       <h1>Registros de campo</h1>
       <p class="muted">Fotografe ou grave vídeos de campo. Escolha um nome antes de abrir a câmera.</p>
       <div class="home-actions"><button id="newModePhoto" class="primary">📷 Abrir câmera</button></div>
