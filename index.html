@@ -226,9 +226,9 @@ h1{font-size:28px;margin-bottom:6px}
   <div id="toast" class="toast"></div>
 
   <script>
-/* Lima Field PWA v0.4.15 */
+/* Lima Field PWA v0.4.16 */
 
-const BUILD_VERSION = '0.4.15';
+const BUILD_VERSION = '0.4.16';
 const PDFJS_PAYLOAD_URL='https://raw.githubusercontent.com/limaagrimensor/limaagrimensor.github.io/a31b65197efb29e8869ba844cc402641234120aa/index.html';
 let PDFJS_MODULE_B64='',PDFJS_WORKER_B64='',pdfJsPayloadPromise=null;
 async function ensurePdfJsPayload(){
@@ -363,7 +363,7 @@ function suspendActiveTrack(){
 function resumeActiveTrackAfterVisibility(){
   const track=state.activeTrack;if(!track||track.paused)return;
   const suspendedAt=Number(track.suspendedAt)||0;if(suspendedAt){track.pausedMs=(Number(track.pausedMs)||0)+Math.max(0,Date.now()-suspendedAt);delete track.suspendedAt;track.lastAcceptedAt=0;persistActiveTrack(true)}
-  acquireTrackWakeLock();requestSensors(false);
+  acquireTrackWakeLock();requestSensors(false,false);
 }
 function clearActiveTrack(){state.activeTrack=null;persistActiveTrack(true);releaseTrackWakeLock()}
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
@@ -394,7 +394,7 @@ gpsBtn.onclick=locateMe;
 async function locateMe(){
   if(!navigator.geolocation){toast('GPS indisponível neste modo. Abra o app por uma conexão segura (HTTPS).',5000);return}
   gpsBtn.classList.add('locating');
-  await requestSensors();
+  await requestSensors(false);
   const gps=await waitForGps(16000);
   gpsBtn.classList.remove('locating');
   if(!gps){toast('Não foi possível obter sua localização. Verifique a permissão do GPS.');return}
@@ -453,7 +453,7 @@ function renderHome(){
     state.activeGeoPdf?.pdfDoc?.destroy?.();
     state.currentProjectId=el.dataset.id; state.drawPoints=[]; state.destination=null; state.mapFeatures=[];state.activeGeoPdf=null;
     state.mapView=null;state.layersProjectId=null;state.followGps=true;
-    renderProject(); requestSensors();
+    renderProject(); requestSensors(false,false);
   });
 }
 
@@ -461,7 +461,7 @@ function promptPhotoName(){
   openModal('Novo registro',`
     <div class="note">As fotos serão salvas em Registros de campo. Os vídeos são salvos diretamente no celular e não ocupam o armazenamento interno do app.</div>
     <div class="form-row"><label>Nome da foto ou do vídeo</label><input id="photoName" maxlength="80" placeholder="Ex.: Marco norte, Entrada da fazenda, Área 01" autofocus></div>
-    <div class="form-row"><label>Resolução da foto</label><select id="photoResolution"><option value="max" ${state.settings.photoResolution==='max'?'selected':''}>Máxima disponível (padrão)</option><option value="12mp" ${state.settings.photoResolution==='12mp'?'selected':''}>Alta • até 12 MP</option><option value="6mp" ${state.settings.photoResolution==='6mp'?'selected':''}>Média • até 6 MP</option><option value="3mp" ${state.settings.photoResolution==='3mp'?'selected':''}>Leve • até 3 MP</option></select><div class="small muted" style="margin-top:5px">Vídeo: até 1080p, 30 fps, áudio e limite de 5 minutos.</div></div>
+    <div class="form-row"><label>Resolução da foto</label><select id="photoResolution"><option value="max" ${state.settings.photoResolution==='max'?'selected':''}>Máxima disponível (padrão)</option><option value="12mp" ${state.settings.photoResolution==='12mp'?'selected':''}>Alta • até 12 MP</option><option value="6mp" ${state.settings.photoResolution==='6mp'?'selected':''}>Média • até 6 MP</option><option value="3mp" ${state.settings.photoResolution==='3mp'?'selected':''}>Leve • até 3 MP</option></select><div class="small muted" style="margin-top:5px">Vídeo: Full HD 1080p, 30 fps, áudio reforçado e limite de 5 minutos.</div></div>
     <div class="action-row"><button id="startNamedPhoto" class="primary">Abrir câmera</button><button id="cancelNamedPhoto" class="secondary">Cancelar</button></div>`);
   const begin=()=>{const name=$('#photoName').value.trim();if(!name){toast('Digite um nome para o registro');$('#photoName').focus();return}const resolution=$('#photoResolution').value||'max';state.settings.photoResolution=resolution;saveState();state.photoCapture={projectId:null,projectName:null,name,resolution,standalone:true};modal.close();startCamera()};
   $('#startNamedPhoto').onclick=begin;$('#cancelNamedPhoto').onclick=()=>{state.photoCapture=null;modal.close()};$('#photoName').onkeydown=e=>{if(e.key==='Enter')begin()};
@@ -524,7 +524,7 @@ function renderMapTab(){
       <button data-base-map="sentinel" class="${state.settings.baseMap==='sentinel'?'active':''}">Sentinel</button>
       <button id="layersBtn" class="layers-btn">Camadas <span class="layer-count">${layerCount}</span></button>
     </div>
-    <div id="mapMessage" class="map-message">${state.followGps?'📍 Posição GPS acompanhada em tempo real. Arraste para navegar livremente.':'Mapa único: GeoPDF, KML, desenhos e GPS ficam sobrepostos aqui.'}</div>
+    <div id="mapMessage" class="map-message">${state.followGps&&state.gps?'📍 Posição GPS acompanhada em tempo real. Arraste para navegar livremente.':state.followGps?'📍 Toque na mira para ativar sua localização.':'Mapa único: GeoPDF, KML, desenhos e GPS ficam sobrepostos aqui.'}</div>
     <div class="map-controls"><button id="zoomIn" aria-label="Aumentar zoom">+</button><button id="zoomOut" aria-label="Diminuir zoom">−</button></div>
     <div id="navCompass" class="nav-compass hidden">
       <div class="compass-dial"><div id="navArrow" class="compass-arrow"></div></div>
@@ -546,7 +546,7 @@ function renderMapTab(){
   $('#createPoint').onclick=showCreatePointModal;
   $('#measureDistance').onclick=()=>{state.drawPoints=[];state.drawHover=null;state.mode='measure';renderMapTab()};
   $('#trackGps').onclick=showTrackModal;
-  $('#goPoint').onclick=()=>showGoPointModal();
+  $('#goPoint').onclick=()=>{requestSensors(true);showGoPointModal()};
   $('#drawArea').classList.toggle('active',state.mode==='draw');
 
   document.querySelectorAll('[data-base-map]').forEach(b=>b.onclick=()=>{state.settings.baseMap=b.dataset.baseMap;if(state.mapView?.zoom>mapMaxViewZoom())state.mapView.zoom=mapMaxViewZoom();saveState();document.querySelectorAll('[data-base-map]').forEach(x=>x.classList.toggle('active',x===b));drawMap();if(b.dataset.baseMap==='sentinel')toast('Sentinel 2025 • visão geral anual; após o zoom 14 a imagem apenas amplia.',4500)});
@@ -1255,14 +1255,15 @@ async function startLiveCamera(){
   const zoomRange=layer.querySelector('.camera-zoom-range'),zoomValue=layer.querySelector('.camera-zoom-value');
   const MAX_VIDEO_MS=5*60*1000;
   let cameraMode='photo',cameraZoom=1,captureDigitalZoom=1,pinchStartDistance=0,pinchStartZoom=1,stream=null,mainCameraId='',frontCameraId='',ultraCameraId='',activeCameraKind='main',rearHalfAvailable=false,zoomTimer=null,zoomTask=Promise.resolve(),halfUnavailableNotified=false;
-  let recording=false,mediaRecorder=null,videoChunks=[],recordingCanvas=null,recordingContext=null,recordedStream=null,microphoneStream=null,recordingRaf=0,recordingFrameBusy=false,recordingStartedAt=0,recordingClockTimer=0,recordingLimitTimer=0;
-  const videoConstraints=(deviceId,facing='environment')=>({video:{...(deviceId?{deviceId:{exact:deviceId}}:{facingMode:{ideal:facing}}),width:{ideal:4096},height:{ideal:2160}},audio:false});
+  let recording=false,mediaRecorder=null,videoChunks=[],recordingCanvas=null,recordingContext=null,recordedStream=null,microphoneStream=null,audioContext=null,recordingRaf=0,recordingFrameBusy=false,recordingStartedAt=0,recordingClockTimer=0,recordingLimitTimer=0;
+  const videoConstraints=(deviceId,facing='environment',strict=false)=>({video:{...(deviceId?{deviceId:{exact:deviceId}}:{facingMode:{ideal:facing}}),width:strict?{exact:1920}:{ideal:1920},height:strict?{exact:1080}:{ideal:1080},frameRate:{ideal:30,max:30},aspectRatio:{ideal:16/9}},audio:false});
+  const openCameraStream=async(deviceId,facing='environment')=>{try{return await navigator.mediaDevices.getUserMedia(videoConstraints(deviceId,facing,true))}catch(_){return navigator.mediaDevices.getUserMedia(videoConstraints(deviceId,facing,false))}};
   const currentTrack=()=>stream?.getVideoTracks?.()[0]||null;
   const cameraHeading=()=>((Number(state.heading)||0)+(activeCameraKind==='front'?180:0)+360)%360;
   const zoomCapability=track=>{try{const z=track?.getCapabilities?.().zoom;return z&&Number.isFinite(z.min)&&Number.isFinite(z.max)?z:null}catch(_){return null}};
   const applyTrackZoom=async target=>{const track=currentTrack(),cap=zoomCapability(track);if(!track||!cap)return null;const actual=Math.max(cap.min,Math.min(cap.max,target));try{await track.applyConstraints({advanced:[{zoom:actual}]});return actual}catch(_){return null}};
   const paintVideoTransform=()=>{video.style.transform=`scale(${activeCameraKind==='front'?-captureDigitalZoom:captureDigitalZoom},${captureDigitalZoom})`};
-  const replaceCameraStream=async(deviceId,kind,facing=kind==='front'?'user':'environment')=>{stream?.getTracks().forEach(t=>t.stop());stream=null;const next=await navigator.mediaDevices.getUserMedia(videoConstraints(deviceId,facing));stream=next;video.srcObject=stream;activeCameraKind=kind;await video.play?.().catch(()=>{});paintVideoTransform();return currentTrack()};
+  const replaceCameraStream=async(deviceId,kind,facing=kind==='front'?'user':'environment')=>{stream?.getTracks().forEach(t=>t.stop());stream=null;const next=await openCameraStream(deviceId,facing);stream=next;video.srcObject=stream;activeCameraKind=kind;await video.play?.().catch(()=>{});paintVideoTransform();return currentTrack()};
   const paintZoom=value=>{zoomRange.value=String(value);zoomValue.textContent=`${value.toFixed(1).replace('.',',')}×`};
   const applyCameraZoom=async requested=>{
     requested=Math.max(Number(zoomRange.min)||.5,Math.min(5,Number(requested)||1));
@@ -1292,7 +1293,7 @@ async function startLiveCamera(){
   const endZoomPointer=e=>{zoomPointers.delete(e.pointerId);if(zoomPointers.size<2)pinchStartDistance=0};
   video.addEventListener('pointerup',endZoomPointer);video.addEventListener('pointercancel',endZoomPointer);video.addEventListener('lostpointercapture',endZoomPointer);
   try{
-    stream=await navigator.mediaDevices.getUserMedia(videoConstraints());video.srcObject=stream;await video.play?.().catch(()=>{});
+    stream=await openCameraStream();video.srcObject=stream;await video.play?.().catch(()=>{});
     mainCameraId=currentTrack()?.getSettings?.().deviceId||'';
     const initialCap=zoomCapability(currentTrack());rearHalfAvailable=!!(initialCap&&initialCap.min<=.5);
     try{
@@ -1308,7 +1309,7 @@ async function startLiveCamera(){
     openModal('Abrir câmera',`<div class="note">A câmera ao vivo foi bloqueada pelo navegador. Use a câmera do celular; a foto continuará sendo carimbada e salva no Modo Foto. A gravação de vídeo exige a câmera ao vivo.</div><br><button id="openSystemCamera" class="primary">Abrir câmera do celular</button>`);
     $('#openSystemCamera').onclick=()=>{modal.close();fallbackPhotoInput()};return;
   }
-  const cleanupRecordingStreams=()=>{cancelAnimationFrame(recordingRaf);clearInterval(recordingClockTimer);clearTimeout(recordingLimitTimer);recordedStream?.getTracks().forEach(t=>t.stop());microphoneStream?.getTracks().forEach(t=>t.stop());recordedStream=null;microphoneStream=null;recordingCanvas=null;recordingContext=null};
+  const cleanupRecordingStreams=()=>{cancelAnimationFrame(recordingRaf);clearInterval(recordingClockTimer);clearTimeout(recordingLimitTimer);recordedStream?.getTracks().forEach(t=>t.stop());microphoneStream?.getTracks().forEach(t=>t.stop());try{audioContext?.close?.()}catch(_){}recordedStream=null;microphoneStream=null;audioContext=null;recordingCanvas=null;recordingContext=null};
   const close=(clearCapture=true)=>{clearTimeout(zoomTimer);cleanupRecordingStreams();stream?.getTracks().forEach(t=>t.stop());stream=null;layer.remove();if(clearCapture)state.photoCapture=null};
   const setModeControlsDisabled=disabled=>modeButtons.forEach(button=>button.disabled=disabled);
   const setCameraMode=mode=>{
@@ -1317,7 +1318,7 @@ async function startLiveCamera(){
     shot.classList.toggle('video',mode==='video');shot.classList.remove('recording');shot.setAttribute('aria-label',mode==='video'?'Iniciar gravação':'Fotografar');
     recordTime.classList.add('hidden');
     layer.querySelector('#camProject').textContent=mode==='video'?'Modo Vídeo':'Modo Foto';
-    layer.querySelector('#camResolution').textContent=mode==='video'?'Vídeo: até 1080p • 30 fps • até 5 min':`Resolução: ${photoResolutionLabel(capture.resolution)}`;
+    layer.querySelector('#camResolution').textContent=mode==='video'?'Vídeo: Full HD 1080p • 30 fps • áudio reforçado':`Resolução: ${photoResolutionLabel(capture.resolution)}`;
   };
   modeButtons.forEach(button=>button.onclick=()=>setCameraMode(button.dataset.cameraMode));
   flipButton.onclick=async()=>{
@@ -1354,11 +1355,21 @@ async function startLiveCamera(){
       await flushCameraZoom();
       if(video.readyState<2)await Promise.race([new Promise(r=>video.addEventListener('loadeddata',r,{once:true})),new Promise(r=>setTimeout(r,2200))]);
       const sourceW=video.videoWidth||1920,sourceH=video.videoHeight||1080,size=videoOutputDimensions(sourceW,sourceH),stampLayout=readCameraStampLayout(layer);
-      recordingCanvas=document.createElement('canvas');recordingCanvas.width=size.width;recordingCanvas.height=size.height;recordingContext=recordingCanvas.getContext('2d');
+      recordingCanvas=document.createElement('canvas');recordingCanvas.width=size.width;recordingCanvas.height=size.height;recordingContext=recordingCanvas.getContext('2d',{alpha:false,desynchronized:true});
       drawZoomedVideoFrame(recordingContext,video,size.width,size.height,captureDigitalZoom);await drawPhotoStamp(recordingContext,size.width,size.height,capture,state.gps,cameraHeading(),stampLayout);
       recordedStream=captureStreamFn.call(recordingCanvas,30);
-      try{microphoneStream=await navigator.mediaDevices.getUserMedia({video:false,audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});microphoneStream.getAudioTracks().forEach(track=>recordedStream.addTrack(track))}catch(_){toast('Microfone não autorizado. O vídeo será gravado sem áudio.',4800)}
-      const preferredMime=recorderMimeType(),options={videoBitsPerSecond:6000000,audioBitsPerSecond:128000,...(preferredMime?{mimeType:preferredMime}:{})};
+      try{
+        microphoneStream=await navigator.mediaDevices.getUserMedia({video:false,audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:{ideal:1},sampleRate:{ideal:48000}}});
+        let audioAdded=false;const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+        if(AudioContextClass)try{
+          audioContext=new AudioContextClass({sampleRate:48000});await audioContext.resume?.();
+          const source=audioContext.createMediaStreamSource(microphoneStream),gain=audioContext.createGain(),compressor=audioContext.createDynamicsCompressor(),destination=audioContext.createMediaStreamDestination();
+          gain.gain.value=2.5;compressor.threshold.value=-18;compressor.knee.value=12;compressor.ratio.value=4;compressor.attack.value=.003;compressor.release.value=.25;
+          source.connect(gain);gain.connect(compressor);compressor.connect(destination);destination.stream.getAudioTracks().forEach(track=>{recordedStream.addTrack(track);audioAdded=true});
+        }catch(_){try{audioContext?.close?.()}catch(_){}audioContext=null}
+        if(!audioAdded)microphoneStream.getAudioTracks().forEach(track=>recordedStream.addTrack(track));
+      }catch(_){toast('Microfone não autorizado. O vídeo será gravado sem áudio.',4800)}
+      const preferredMime=recorderMimeType(),options={videoBitsPerSecond:10000000,audioBitsPerSecond:192000,...(preferredMime?{mimeType:preferredMime}:{})};
       try{mediaRecorder=new MediaRecorder(recordedStream,options)}catch(_){mediaRecorder=new MediaRecorder(recordedStream)}
       const recorder=mediaRecorder;videoChunks=[];recordingStartedAt=Date.now();
       recorder.ondataavailable=event=>{if(event.data?.size)videoChunks.push(event.data)};
@@ -1406,12 +1417,12 @@ async function startLiveCamera(){
   };
 }
 function videoOutputDimensions(sourceW,sourceH){
-  const long=Math.max(sourceW,sourceH),short=Math.min(sourceW,sourceH),scale=Math.min(1,1920/Math.max(1,long),1080/Math.max(1,short));
-  return {width:Math.max(2,Math.round(sourceW*scale/2)*2),height:Math.max(2,Math.round(sourceH*scale/2)*2)};
+  return sourceH>=sourceW?{width:1080,height:1920}:{width:1920,height:1080};
 }
 function formatVideoTime(ms){const seconds=Math.max(0,Math.floor(ms/1000));return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`}
 function drawZoomedVideoFrame(ctx,video,w,h,zoom=1){
-  const sourceW=video.videoWidth||video.width||w,sourceH=video.videoHeight||video.height||h,z=Math.max(1,Math.min(5,Number(zoom)||1)),cropW=sourceW/z,cropH=sourceH/z;
+  const sourceW=video.videoWidth||video.width||w,sourceH=video.videoHeight||video.height||h,z=Math.max(1,Math.min(5,Number(zoom)||1)),targetRatio=w/h;
+  let cropW=sourceW/z,cropH=sourceH/z;if(cropW/cropH>targetRatio)cropW=cropH*targetRatio;else cropH=cropW/targetRatio;
   ctx.drawImage(video,(sourceW-cropW)/2,(sourceH-cropH)/2,cropW,cropH,0,0,w,h);
 }
 function fallbackPhotoInput(){
@@ -1684,8 +1695,10 @@ function bearing(a,b,c,d){const r=Math.PI/180,p1=a*r,p2=c*r,dl=(d-b)*r,y=Math.si
 function cardinal(h){return ['N','NE','E','SE','S','SW','W','NW'][Math.round(((h%360)+360)%360/45)%8]}
 
 /* Sensors */
-async function requestSensors(includeOrientation=true){
-  if(navigator.geolocation&&requestSensors._watch==null){
+async function requestSensors(includeOrientation=true,allowPrompt=true){
+  let canStartGps=true;
+  if(!allowPrompt&&navigator.permissions?.query)try{const permission=await navigator.permissions.query({name:'geolocation'});canStartGps=permission.state==='granted'}catch(_){}
+  if(canStartGps&&navigator.geolocation&&requestSensors._watch==null){
     requestSensors._watch=navigator.geolocation.watchPosition(pos=>{
       state.gps={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,altitude:pos.coords.altitude||0,speed:pos.coords.speed};
       state.gpsUpdatedAt=Date.now();
@@ -1701,7 +1714,7 @@ async function requestSensors(includeOrientation=true){
       toast('GPS: '+err.message);
     },{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
   }
-  if(!includeOrientation)return;
+  if(!includeOrientation||requestSensors._ori)return;
   try{
     if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
       const res=await DeviceOrientationEvent.requestPermission();state.orientationGranted=res==='granted';

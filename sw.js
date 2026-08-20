@@ -1,4 +1,4 @@
-const CACHE_NAME='lima-field-v0.4.15';
+const CACHE_NAME='lima-field-v0.4.16';
 const PDFJS_PAYLOAD_URL='https://raw.githubusercontent.com/limaagrimensor/limaagrimensor.github.io/a31b65197efb29e8869ba844cc402641234120aa/index.html';
 const CORE_ASSETS=[
   './',
