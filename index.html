@@ -226,9 +226,9 @@ h1{font-size:28px;margin-bottom:6px}
   <div id="toast" class="toast"></div>
 
   <script>
-/* Lima Field PWA v0.4.16 */
+/* Lima Field PWA v0.4.17 */
 
-const BUILD_VERSION = '0.4.16';
+const BUILD_VERSION = '0.4.17';
 const PDFJS_PAYLOAD_URL='https://raw.githubusercontent.com/limaagrimensor/limaagrimensor.github.io/a31b65197efb29e8869ba844cc402641234120aa/index.html';
 let PDFJS_MODULE_B64='',PDFJS_WORKER_B64='',pdfJsPayloadPromise=null;
 async function ensurePdfJsPayload(){
@@ -1318,7 +1318,7 @@ async function startLiveCamera(){
     shot.classList.toggle('video',mode==='video');shot.classList.remove('recording');shot.setAttribute('aria-label',mode==='video'?'Iniciar gravação':'Fotografar');
     recordTime.classList.add('hidden');
     layer.querySelector('#camProject').textContent=mode==='video'?'Modo Vídeo':'Modo Foto';
-    layer.querySelector('#camResolution').textContent=mode==='video'?'Vídeo: Full HD 1080p • 30 fps • áudio reforçado':`Resolução: ${photoResolutionLabel(capture.resolution)}`;
+    layer.querySelector('#camResolution').textContent=mode==='video'?'Vídeo: até Full HD • 30 fps • áudio reforçado':`Resolução: ${photoResolutionLabel(capture.resolution)}`;
   };
   modeButtons.forEach(button=>button.onclick=()=>setCameraMode(button.dataset.cameraMode));
   flipButton.onclick=async()=>{
@@ -1334,7 +1334,7 @@ async function startLiveCamera(){
       try{if(previousKind==='front')await replaceCameraStream(frontCameraId,'front','user');else await replaceCameraStream(mainCameraId,'main','environment')}catch(_){}
     }finally{flipButton.disabled=false;shot.disabled=false;paintVideoTransform()}
   };
-  const recorderMimeType=()=>['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(type=>{try{return MediaRecorder.isTypeSupported?.(type)}catch(_){return false}})||'';
+  const recorderMimeType=()=>['video/mp4;codecs=avc1.424028,mp4a.40.2','video/mp4;codecs=avc1.4D0028,mp4a.40.2','video/mp4;codecs=avc1.640028,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(type=>{try{return MediaRecorder.isTypeSupported?.(type)}catch(_){return false}})||'';
   const updateRecordingClock=()=>{const elapsed=Math.min(MAX_VIDEO_MS,Math.max(0,Date.now()-recordingStartedAt));recordTime.textContent=`${formatVideoTime(elapsed)} / 05:00`};
   const renderRecordingFrame=async stampLayout=>{
     if(!recording||recordingFrameBusy||!recordingContext||!recordingCanvas)return;
