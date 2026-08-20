@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "br.com.limaengenhariapa.limafield",
+        "sha256_cert_fingerprints": ["FE:0B:80:36:73:D7:4E:C7:62:3B:F3:35:C2:4C:92:21:ED:79:4C:0D:7F:CC:91:FE:5B:F7:81:8A:86:29:A7:9C"]
+      }
+    }]
